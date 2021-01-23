@@ -19,14 +19,30 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	password := user.GetPassword(username)
 	match := helper.ComparePassword(password, formPassword)
 
-	data := []helper.MessageData{}
+	var data *helper.MessageData
+
 	if password == "" || !match {
-		data = helper.SendMessage("login.wrong.password", "Oops something went wrong, try again.")
+		data = &helper.MessageData{
+			Code:    "login.wrong.password",
+			Message: "Oops something went wrong, try again.",
+		}
 		render.Status(r, http.StatusUnauthorized)
 
 	} else {
 
-		data = helper.SendMessage("login.success", "You have succesfully logged in.")
+		uid, level := user.GetUidAdmin(username)
+
+		token, err := user.GenerateToken(uid, level)
+
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+
+		data = &helper.MessageData{
+			Code:    "login.successful",
+			Message: "You have successfully logged in.",
+			Token:   token,
+		}
 		render.Status(r, http.StatusOK)
 	}
 
@@ -73,10 +89,11 @@ func GetDataByUID(w http.ResponseWriter, r *http.Request) {
 	result, err := helper.ExecuteQuery(query, userid)
 	if err != nil {
 
-		data := helper.SendMessage("mysql.error", fmt.Sprintf("%s", err))
-
 		render.Status(r, http.StatusBadRequest)
-		render.JSON(w, r, data)
+		render.JSON(w, r, &helper.MessageData{
+			Code:    "mysql.error",
+			Message: fmt.Sprintf("%s", err),
+		})
 		return
 	}
 
@@ -105,11 +122,14 @@ func GetDataByUID(w http.ResponseWriter, r *http.Request) {
 	)
 	if err != nil {
 		render.Status(r, http.StatusBadRequest)
-		render.JSON(w, r, helper.SendMessage("no.rows", "Oops something went wrong, contact developer ASAP."))
+		render.JSON(w, r, &helper.MessageData{
+			Code:    "no.rows",
+			Message: "User not found"},
+		)
 		return
 	}
 
-	render.JSON(w, r, []user.Player{{Account: data.Account,
+	render.JSON(w, r, &user.Player{Account: data.Account,
 		Stats: data.Stats,
-		Items: data.Items}})
+		Items: data.Items})
 }
