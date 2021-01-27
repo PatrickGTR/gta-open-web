@@ -1,9 +1,13 @@
 import { useEffect, useState } from "react";
 import Layout from "../components/layout";
 
+import useStore from "../store/user";
+
 const DashBoard = () => {
   const [userData, setUserData] = useState({});
   const [isLoading, setLoading] = useState(true);
+
+  const isLogged = useStore((state) => state.loginStatus);
 
   useEffect(async () => {
     const response = await fetch("http://localhost:8000/user/1", {
@@ -15,8 +19,11 @@ const DashBoard = () => {
 
     if (response.status === 200) {
       const data = await response.json();
+
       setUserData(data);
       setLoading(false);
+
+      console.log(isLogged);
     }
   }, []);
 
@@ -56,12 +63,14 @@ const DashBoard = () => {
     <>
       <table>
         <thead>
-          <th>Statistic</th>
-          <th>Value</th>
+          <tr>
+            <th>Statistic</th>
+            <th>Value</th>
+          </tr>
         </thead>
         <tbody>
           {Object.keys(userData.stats).map((key, value) => (
-            <tr>
+            <tr key={key}>
               <td>{key.charAt(0).toUpperCase() + key.slice(1)}</td>
               <td>{value}</td>
             </tr>
@@ -75,12 +84,14 @@ const DashBoard = () => {
     <>
       <table>
         <thead>
-          <th>Item</th>
-          <th>Quantity</th>
+          <tr>
+            <th>Item</th>
+            <th>Quantity</th>
+          </tr>
         </thead>
         <tbody>
           {Object.keys(userData.items).map((key, value) => (
-            <tr>
+            <tr key={key}>
               <td>{key.charAt(0).toUpperCase() + key.slice(1)}</td>
               <td>{value}</td>
             </tr>
@@ -91,8 +102,9 @@ const DashBoard = () => {
   );
 
   const DisplayInfo = () =>
-    Object.keys(userData).length > 0 ? (
+    Object.keys(userData).length != 0 ? (
       <>
+        <h2>{userData.account.username}</h2>
         <div className="row">
           <div className="column">
             <DisplayAccountData />
@@ -109,16 +121,12 @@ const DashBoard = () => {
       <p>Could not redeem data, empty objet passed</p>
     );
 
-  //const skin_link = `https://open.mp/images/skins/${userData.stats.skin}.png`;
-
   return (
     <Layout title="Dashboard">
       {isLoading ? (
         "Please wait... Loading user data"
       ) : (
         <>
-          <h2>{userData.account.username}</h2>
-
           <DisplayInfo />
         </>
       )}

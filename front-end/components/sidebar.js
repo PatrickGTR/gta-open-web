@@ -1,6 +1,8 @@
 import Router from "next/router";
 import { useState } from "react";
 
+import useStore from "../store/user";
+
 const SideBar = () => {
   const [accountDetails, setAccountDetails] = useState({
     username: "",
@@ -8,6 +10,8 @@ const SideBar = () => {
   });
 
   const [errorMessage, setErrorMesssage] = useState(null);
+
+  const setLogin = useStore((state) => state.setLoginStatus);
 
   const doLogin = async (e) => {
     e.preventDefault();
@@ -22,11 +26,13 @@ const SideBar = () => {
     });
 
     if (response.status === 200) {
-      Router.push(`/dashboard`);
-
       const { token } = await response.json();
 
       localStorage.setItem("jwt-token", token);
+
+      setLogin(true);
+
+      Router.push(`/dashboard`);
       return;
     }
   };

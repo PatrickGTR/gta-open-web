@@ -10,7 +10,8 @@
   "dependencies": {
     "next": "10.0.5",
     "react": "17.0.1",
-    "react-dom": "17.0.1"
+    "react-dom": "17.0.1",
+    "zustand": "^3.3.1"
   },
   "devDependencies": {
     "prettier": "2.2.1"
