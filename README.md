@@ -27,3 +27,23 @@ Currenly WIP ... more endpoints will be added soon!
 - Written in **React & Next JS**
 
 Work in progress.
+
+# How to build
+
+## Development mode
+
+```batch
+cd front-end
+npm run dev
+
+cd ..
+
+cd back-end
+go run main.go
+```
+
+## Production deployment
+
+```batch
+WIP
+```
