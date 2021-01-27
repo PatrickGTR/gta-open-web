@@ -69,6 +69,7 @@ func ValidateMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		// No authorization header found
 		authHeader := r.Header.Get("authorization")
 		if authHeader == "" {
+			render.Status(r, http.StatusUnauthorized)
 			render.JSON(w, r, &Exception{
 				Code:    "no.token",
 				Message: "Authorization header required.",
@@ -81,6 +82,7 @@ func ValidateMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		// index[1] -> Token
 		bearerToken := strings.Split(authHeader, " ")
 		if len(bearerToken) != 2 {
+			render.Status(r, http.StatusNotAcceptable)
 			render.JSON(w, r, &Exception{
 				Code:    "invalid.bearer.len",
 				Message: "Bearer length invalid, must be 2.",
@@ -98,6 +100,7 @@ func ValidateMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		// An error occured during the process of retrieving token,
 		// token can be expired, unverified etc..
 		if err != nil {
+			render.Status(r, http.StatusNotAcceptable)
 			render.JSON(w, r, &Exception{
 				Code:    "token.error",
 				Message: err.Error(),
@@ -106,6 +109,7 @@ func ValidateMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		}
 
 		if !token.Valid {
+			render.Status(r, http.StatusNotAcceptable)
 			render.JSON(w, r, &Exception{
 				Code:    "invalid.auth.token",
 				Message: "Invalid authorization token received",

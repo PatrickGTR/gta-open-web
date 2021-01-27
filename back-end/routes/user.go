@@ -130,6 +130,7 @@ func GetDataByUID(w http.ResponseWriter, r *http.Request) {
 		&data.Items.Condom,
 		&data.Items.Scissors,
 	)
+	result.Close()
 	if err != nil {
 		render.Status(r, http.StatusBadRequest)
 		render.JSON(w, r, &Exception{

@@ -51,6 +51,7 @@ func GetUID(username string) (uid int, err error) {
 
 	result.Next()
 	result.Scan(&uid)
+	result.Close()
 	return
 }
 
@@ -72,5 +73,6 @@ func GetPassword(username string) (password string) {
 	// grab single data
 	result.Next()
 	result.Scan(&password)
+	result.Close()
 	return
 }
