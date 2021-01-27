@@ -10,46 +10,57 @@ import (
 	"github.com/open-backend/user"
 )
 
+// Exception alias of helper.MessageData
+type Exception helper.MessageData
+
 func Login(w http.ResponseWriter, r *http.Request) {
 	// grab data from the body (form-data)
-	username := r.FormValue("username")
+	formUsername := r.FormValue("username")
 	formPassword := r.FormValue("password")
 
 	// retrieve password from database
-	password := user.GetPassword(username)
+	password := user.GetPassword(formUsername)
 	match := helper.ComparePassword(password, formPassword)
 
-	var data *helper.MessageData
-
 	if password == "" || !match {
-		data = &helper.MessageData{
+		data := &Exception{
 			Code:    "login.wrong.password",
 			Message: "Oops something went wrong, try again.",
 		}
 		render.Status(r, http.StatusUnauthorized)
+		render.JSON(w, r, data)
 
 	} else {
 
-		uid, level := user.GetUidAdmin(username)
+		uid, err := user.GetUID(formUsername)
+		if err != nil {
+			fmt.Println(err.Error())
+		}
 
-		token, err := user.GenerateToken(uid, level)
+		token, err := user.GenerateToken(uid)
 
 		if err != nil {
 			fmt.Println(err.Error())
 		}
 
-		data = &helper.MessageData{
-			Code:    "login.successful",
-			Message: "You have successfully logged in.",
+		data := struct {
+			Code    string `json:"code"`
+			Message string `json:"msg"`
+			Token   string `json:"token"`
+		}{
+			Code:    "login.success",
+			Message: "You have successfully logged in",
 			Token:   token,
 		}
+
 		render.Status(r, http.StatusOK)
+		render.JSON(w, r, data)
 	}
 
-	render.JSON(w, r, data)
 }
 
 func GetDataByUID(w http.ResponseWriter, r *http.Request) {
+
 	userid := chi.URLParam(r, "userid")
 
 	query := `
@@ -88,9 +99,8 @@ func GetDataByUID(w http.ResponseWriter, r *http.Request) {
 
 	result, err := helper.ExecuteQuery(query, userid)
 	if err != nil {
-
 		render.Status(r, http.StatusBadRequest)
-		render.JSON(w, r, &helper.MessageData{
+		render.JSON(w, r, &Exception{
 			Code:    "mysql.error",
 			Message: fmt.Sprintf("%s", err),
 		})
@@ -122,7 +132,7 @@ func GetDataByUID(w http.ResponseWriter, r *http.Request) {
 	)
 	if err != nil {
 		render.Status(r, http.StatusBadRequest)
-		render.JSON(w, r, &helper.MessageData{
+		render.JSON(w, r, &Exception{
 			Code:    "no.rows",
 			Message: "User not found"},
 		)

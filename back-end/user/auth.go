@@ -2,6 +2,7 @@ package user
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -9,19 +10,17 @@ import (
 )
 
 type JWTData struct {
-	UID   int   `json:"uid"`
-	Admin uint8 `json:"admin"`
+	UID int `json:"uid"`
 	jwt.StandardClaims
 }
 
-func GenerateToken(uid int, admin uint8) (signToken string, err error) {
+func GenerateToken(uid int) (signToken string, err error) {
 
-	// expire in 30 days time
-	exp := time.Now().Add((time.Hour * 24) * 30).Unix()
+	// expire every 30 minute
+	exp := time.Now().Add(time.Minute * 30).Unix()
 
 	claims := JWTData{
-		UID:   uid,
-		Admin: admin,
+		UID: uid,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: exp,
 			Issuer:    "GTA-Open",
@@ -30,33 +29,28 @@ func GenerateToken(uid int, admin uint8) (signToken string, err error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	signToken, err = token.SignedString([]byte("D887FF9A47539CF9592E5D14BEE93"))
+	signToken, err = token.SignedString([]byte(os.Getenv("SECRET_KEY")))
 	return
 }
 
-func GetUidAdmin(username string) (uid int, admin uint8) {
+func GetUID(username string) (uid int, err error) {
 
 	query := `
 		SELECT
-			p.u_id,
-			a.admin_level
+			u_id
 		FROM
-			players p
-		LEFT JOIN
-			admins a
-		ON
-			p.u_id = a.u_id
+			players
 		WHERE
-			p.username = ?
+			username = ?
 	`
 
 	result, err := helper.ExecuteQuery(query, username)
 	if err != nil {
-		fmt.Println(err.Error())
+		return
 	}
 
 	result.Next()
-	result.Scan(&uid, &admin)
+	result.Scan(&uid)
 	return
 }
 

@@ -4,13 +4,10 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func ComparePassword(passwordFirst string, passwordSecond string) (match bool) {
-
+func ComparePassword(passwordFirst string, passwordSecond string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(passwordFirst), []byte(passwordSecond))
 	if err != nil {
-		match = false
-	} else {
-		match = true
+		return false
 	}
-	return
+	return true
 }
