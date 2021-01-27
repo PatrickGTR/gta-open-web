@@ -1,40 +1,49 @@
-body, html, #__next {
-    margin: 0;
-    padding: 0;
-    height: 100%;
+body,
+html,
+#__next {
+  margin: 0;
+  padding: 0;
+  height: 100%;
 }
 
 .container {
-    min-height: 100%;
+  min-height: 100%;
 }
 
 .table-statistics {
-    font-size: 16px;
+  font-size: 16px;
 }
 
 .home-content p {
-    display: grid;
-    font-size: 14px;
+  display: grid;
+  font-size: 14px;
 }
 
 .home-content .author-date {
-    border-left: 4px solid grey;
-    padding: 0 1rem;
-    margin-bottom: 10px;
-    font-size: 10px;
+  border-left: 4px solid grey;
+  padding: 0 1rem;
+  margin-bottom: 10px;
+  font-size: 10px;
 }
 
 .container {
-    padding-top: 10rem;
+  padding-top: 10rem;
 }
 
 .row .column.column-offset-5 {
-    margin-left: 5%;
+  margin-left: 5%;
 }
 
 .footer {
-    text-align: center;
-    color: white;
-    background-color: #424141;
-    padding: 5rem;
+  text-align: center;
+  color: white;
+  background-color: #424141;
+  padding: 5rem;
+}
+
+.error-msg {
+  color: red;
+  font-weight: bold;
+  font-size: 12px;
+  margin-bottom: 5px;
 }

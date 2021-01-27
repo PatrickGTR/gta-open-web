@@ -1,47 +1,100 @@
-export default () => {
-    return (
+import Router from "next/router";
+import { useState } from "react";
+
+const SideBar = () => {
+  const [accountDetails, setAccountDetails] = useState({
+    username: "",
+    password: "",
+  });
+
+  const [errorMessage, setErrorMesssage] = useState(null);
+
+  const doLogin = async (e) => {
+    e.preventDefault();
+
+    let formData = new FormData();
+    formData.append("username", accountDetails.username);
+    formData.append("password", accountDetails.password);
+
+    const response = await fetch("http://localhost:8000/user/", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (response.status === 200) {
+      Router.push(`/dashboard`);
+
+      const { token } = await response.json();
+
+      localStorage.setItem("jwt-token", token);
+      return;
+    }
+  };
+
+  const onChange = (e) => {
+    e.preventDefault();
+    setAccountDetails({ ...accountDetails, [e.target.name]: e.target.value });
+  };
+
+  return (
     <div>
-        <form>
-            <label>Username</label>
+      <form>
+        <label>Username</label>
+        <input
+          name="username"
+          type="text"
+          placeholder="Username"
+          onChange={onChange}
+        />
 
-            <input type="text" placeholder="Username"/>
+        <label>Password</label>
+        <h6 className="error-msg">{errorMessage !== null && errorMessage}</h6>
+        <input
+          name="password"
+          type="password"
+          placeholder="Passowrd"
+          onChange={onChange}
+        />
 
-            <label>Password</label>
+        <input
+          className="button-primary"
+          type="submit"
+          value="Login"
+          onClick={doLogin}
+        />
+      </form>
 
-            <input type="text" placeholder="Username"/>
-            <input class="button-primary" type="submit" value="Login"/>
-        </form>
-
-        <h3>Server Statistics</h3>
-        <table class="table-statistics">
-            <tbody>
-                <tr>
-                    <td>Online Players</td>
-                    <td>20 / 100</td>
-                </tr>
-                <tr>
-                    <td>Registered Users</td>
-                    <td>123,000</td>
-                </tr>
-                <tr>
-                    <td>Banned Users</td>
-                    <td>6,999</td>
-                </tr>
-                <tr>
-                    <td>Most Kills</td>
-                    <td>IAlwaysKill</td>
-                </tr>
-                <tr>
-                    <td>Most Deaths</td>
-                    <td>IAlwaysDie</td>
-                </tr>
-                <tr>
-                    <td>Most Money</td>
-                    <td>IAmMadeOfMoney</td>
-                </tr>
-            </tbody>
-        </table>
+      <h3>Server Statistics</h3>
+      <table className="table-statistics">
+        <tbody>
+          <tr>
+            <td>Online Players</td>
+            <td>20 / 100</td>
+          </tr>
+          <tr>
+            <td>Registered Users</td>
+            <td>123,000</td>
+          </tr>
+          <tr>
+            <td>Banned Users</td>
+            <td>6,999</td>
+          </tr>
+          <tr>
+            <td>Most Kills</td>
+            <td>IAlwaysKill</td>
+          </tr>
+          <tr>
+            <td>Most Deaths</td>
+            <td>IAlwaysDie</td>
+          </tr>
+          <tr>
+            <td>Most Money</td>
+            <td>IAmMadeOfMoney</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
+  );
+};
 
-    )
-}
+export default SideBar;
