@@ -1,6 +1,48 @@
 import Link from "next/link";
+import useStore from "../store/user";
 
 const NavBar = () => {
+  const isLoggedIn = useStore((state) => state.loginStatus);
+
+  const GlobalNav = () => {
+    return (
+      <>
+        <li>
+          <Link href="/">
+            <a>Home</a>
+          </Link>
+        </li>
+        <li>
+          <Link href="/">
+            <a>Forums</a>
+          </Link>
+        </li>
+      </>
+    );
+  };
+
+  const LoggedUserNav = () => {
+    const clear = useStore((state) => state.clearState);
+    const doLogout = (e) => {
+      //clear();
+    };
+
+    return (
+      <>
+        <li>
+          <Link href="/dashboard">
+            <a>Dashboard</a>
+          </Link>
+        </li>
+        <li>
+          <Link href="/">
+            <a onClick={doLogout}>Logout</a>
+          </Link>
+        </li>
+      </>
+    );
+  };
+
   return (
     <header className="header">
       <a href="" className="logo">
@@ -14,19 +56,8 @@ const NavBar = () => {
         <span className="navicon"></span>
       </label>
       <ul className="menu">
-        <li>
-          <Link href="/">
-            <a>Home</a>
-          </Link>
-        </li>
-        <li>
-          <a href="#work">Forums</a>
-        </li>
-        <li>
-          <Link href="/dashboard">
-            <a>Dashboard</a>
-          </Link>
-        </li>
+        <GlobalNav />
+        {isLoggedIn && <LoggedUserNav />}
       </ul>
     </header>
   );

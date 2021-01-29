@@ -1,29 +1,37 @@
 import { useEffect, useState } from "react";
-import Layout from "../components/layout";
-
 import useStore from "../store/user";
+import Router from "next/router";
+import Layout from "../components/layout";
 
 const DashBoard = () => {
   const [userData, setUserData] = useState({});
   const [isLoading, setLoading] = useState(true);
 
   const isLogged = useStore((state) => state.loginStatus);
+  const token = useStore((state) => state.jwtToken);
 
   useEffect(async () => {
-    const response = await fetch("http://localhost:8000/user/1", {
-      method: "GET",
-      headers: {
-        Authorization: "Bearer " + localStorage.getItem("jwt-token"),
+    if (!isLogged) {
+      Router.push("/");
+      return;
+    }
+
+    const response = await fetch(
+      "http://localhost:8000/user/1",
+      {
+        method: "GET",
+        headers: {
+          Authorization: "Bearer " + token,
+        },
       },
-    });
+      [],
+    );
 
     if (response.status === 200) {
       const data = await response.json();
 
       setUserData(data);
       setLoading(false);
-
-      console.log(isLogged);
     }
   }, []);
 
@@ -101,8 +109,8 @@ const DashBoard = () => {
     </>
   );
 
-  const DisplayInfo = () =>
-    Object.keys(userData).length != 0 ? (
+  const DisplayInfo = () => {
+    return (
       <>
         <h2>{userData.account.username}</h2>
         <div className="row">
@@ -117,9 +125,8 @@ const DashBoard = () => {
           </div>
         </div>
       </>
-    ) : (
-      <p>Could not redeem data, empty objet passed</p>
     );
+  };
 
   return (
     <Layout title="Dashboard">
