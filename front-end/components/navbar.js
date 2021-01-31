@@ -22,9 +22,14 @@ const NavBar = () => {
   };
 
   const LoggedUserNav = () => {
-    const clear = useStore((state) => state.clearState);
-    const doLogout = (e) => {
-      //clear();
+    const setLogin = useStore((state) => state.setLoginStatus);
+    const doLogout = () => {
+      setLogin(false);
+
+      fetch("http://localhost:8000/user/", {
+        method: "DELETE",
+        credentials: "include",
+      });
     };
 
     return (

@@ -5,14 +5,10 @@ const useStore = create(
   persist(
     (set) => ({
       loginStatus: false,
-      jwtToken: "",
-      adminLevel: 0,
-      setJwtToken: (token) => set({ jwtToken: token }),
       setLoginStatus: (toggle) => set({ loginStatus: toggle }),
-      setAdminLevel: (level) => set({ adminLevel: level }),
     }),
     {
-      name: "zustand-states",
+      name: "persisted-state",
       getStorage: () => localStorage,
     },
   ),

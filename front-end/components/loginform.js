@@ -4,7 +4,6 @@ import useStore from "../store/user";
 
 const LoginForm = () => {
   const setLogin = useStore((state) => state.setLoginStatus);
-  const setToken = useStore((state) => state.setJwtToken);
   const isLoggedIn = useStore((state) => state.loginStatus);
 
   const [errorMessage, setErrorMesssage] = useState(null);
@@ -29,12 +28,10 @@ const LoginForm = () => {
     const response = await fetch("http://localhost:8000/user/", {
       method: "POST",
       body: formData,
+      credentials: "include",
     });
 
     if (response.status === 200) {
-      const { token } = await response.json();
-
-      setToken(token);
       setLogin(true);
 
       Router.push(`/dashboard`);

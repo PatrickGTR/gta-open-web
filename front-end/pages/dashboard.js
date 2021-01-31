@@ -3,12 +3,27 @@ import useStore from "../store/user";
 import Router from "next/router";
 import Layout from "../components/layout";
 
+function getCookie(cname) {
+  var name = cname + "=";
+  var decodedCookie = decodeURIComponent(document.cookie);
+  var ca = decodedCookie.split(";");
+  for (var i = 0; i < ca.length; i++) {
+    var c = ca[i];
+    while (c.charAt(0) == " ") {
+      c = c.substring(1);
+    }
+    if (c.indexOf(name) == 0) {
+      return c.substring(name.length, c.length);
+    }
+  }
+  return "";
+}
+
 const DashBoard = () => {
   const [userData, setUserData] = useState({});
   const [isLoading, setLoading] = useState(true);
 
   const isLogged = useStore((state) => state.loginStatus);
-  const token = useStore((state) => state.jwtToken);
 
   useEffect(async () => {
     if (!isLogged) {
@@ -16,15 +31,14 @@ const DashBoard = () => {
       return;
     }
 
+    console.log(getCookie("db_user_id"));
+
     const response = await fetch(
-      "http://localhost:8000/user/1",
+      `http://localhost:8000/user/${getCookie("db_user_id")}`,
       {
         method: "GET",
-        headers: {
-          Authorization: "Bearer " + token,
-        },
+        credentials: "include",
       },
-      [],
     );
 
     if (response.status === 200) {
