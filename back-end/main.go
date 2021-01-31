@@ -1,45 +1,34 @@
 package main
 
 // TODO
-// Modularize
-// Create Helper Function
-// Add Cors
-// Add Rate limit (to non server caller)
-// env for MySQL credentials
+// Review code & refactor
 
 import (
 	"fmt"
 	"net/http"
-	"os"
-	"strings"
+	"strconv"
 
-	"github.com/dgrijalva/jwt-go"
-	"github.com/open-backend/helper"
 	"github.com/open-backend/routes"
+	"github.com/open-backend/user"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/cors"
 	"github.com/go-chi/render"
-	_ "github.com/go-sql-driver/mysql"
 )
 
 func main() {
-
-	helper.SqlHandle = helper.InitDatabase()
-	// close connection when function ends
-	defer helper.SqlHandle.Close()
 
 	router := chi.NewRouter()
 
 	router.Use(cors.Handler(cors.Options{
 		// AllowedOrigins: []string{"https://foo.com"}, // Use this to allow specific origin hosts
-		AllowedOrigins: []string{"*"},
-		// AllowOriginFunc:  func(r *http.Request, origin string) bool { return true },
-		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders: []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		AllowedOrigins:  []string{"Origin"},
+		AllowOriginFunc: func(r *http.Request, origin string) bool { return true },
+		AllowedMethods:  []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:  []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		//ExposedHeaders:   []string{"Link"},
-		//AllowCredentials: false,
+		AllowCredentials: true,
 		//MaxAge:           300, // Maximum value not ignored by any of major browsers
 	}))
 
@@ -51,69 +40,41 @@ func main() {
 
 	// nested route
 	router.Route("/user", func(r chi.Router) {
-		r.Get("/{userid}", ValidateMiddleware(routes.GetDataByUID))
+		r.Get("/{userid}", isLoggedIn(routes.GetDataByUID))
 		r.Post("/", routes.Login)
+		r.Delete("/", isLoggedIn(routes.Logout))
 	})
 
 	PORT := 8000
+	fmt.Println("Web server is running on port", PORT)
 	http.ListenAndServe(fmt.Sprintf(":%d", PORT), router)
-	fmt.Printf("Web server running on port %d", PORT)
 }
 
-// Exception is an alias
-type Exception helper.MessageData
-
-func ValidateMiddleware(next http.HandlerFunc) http.HandlerFunc {
+func isLoggedIn(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		session, _ := user.Cookie.Get(r, "sessionid")
 
-		// No authorization header found
-		authHeader := r.Header.Get("authorization")
-		if authHeader == "" {
+		// no session id set
+		sessionContent := session.Values["accountID"]
+		if sessionContent == nil {
 			render.Status(r, http.StatusUnauthorized)
-			render.JSON(w, r, &Exception{
-				Code:    "no.token",
-				Message: "Authorization header required.",
-			})
 			return
 		}
 
-		// Split [Bearer Token]
-		// index[0] -> Bearer
-		// index[1] -> Token
-		bearerToken := strings.Split(authHeader, " ")
-		if len(bearerToken) != 2 {
-			render.Status(r, http.StatusNotAcceptable)
-			render.JSON(w, r, &Exception{
-				Code:    "invalid.bearer.len",
-				Message: "Bearer length invalid, must be 2.",
-			})
+		// account ID starts at 1
+		sessionUID := session.Values["accountID"].(int)
+		if sessionUID <= 0 {
+			render.Status(r, http.StatusUnauthorized)
 			return
 		}
 
-		token, err := jwt.Parse(bearerToken[1], func(token *jwt.Token) (interface{}, error) {
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
-			}
-			return []byte(os.Getenv("SECRET_KEY")), nil
-		})
-
-		// An error occured during the process of retrieving token,
-		// token can be expired, unverified etc..
-		if err != nil {
-			render.Status(r, http.StatusNotAcceptable)
-			render.JSON(w, r, &Exception{
-				Code:    "token.error",
-				Message: err.Error(),
-			})
-			return
-		}
-
-		if !token.Valid {
-			render.Status(r, http.StatusNotAcceptable)
-			render.JSON(w, r, &Exception{
-				Code:    "invalid.auth.token",
-				Message: "Invalid authorization token received",
-			})
+		// check validity of the uid cookie and compare with the session uid.
+		// just an extra check if uid cookie has been tampered.
+		cookieContent, _ := r.Cookie("db_user_id")
+		cookieUID, _ := strconv.Atoi(cookieContent.Value)
+		if cookieUID != sessionUID {
+			fmt.Println(cookieUID, sessionUID)
+			render.Status(r, http.StatusBadRequest)
 			return
 		}
 

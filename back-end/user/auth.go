@@ -2,34 +2,38 @@ package user
 
 import (
 	"fmt"
+	"net/http"
 	"os"
-	"time"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/gorilla/sessions"
 	"github.com/open-backend/helper"
 )
 
-type JWTData struct {
-	UID int `json:"uid"`
-	jwt.StandardClaims
+var Cookie *sessions.CookieStore
+
+func init() {
+	Cookie = sessions.NewCookieStore([]byte(os.Getenv("SECRET_KEY")))
+	Cookie.Options.Path = "/"
 }
 
-func GenerateToken(uid int) (signToken string, err error) {
+func GenerateSession(w http.ResponseWriter, r *http.Request, uid int) (err error) {
 
-	// expire every 30 minute
-	exp := time.Now().Add(time.Minute * 30).Unix()
+	session, _ := Cookie.Get(r, "sessionid")
 
-	claims := JWTData{
-		UID: uid,
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: exp,
-			Issuer:    "GTA-Open",
-		},
+	session.Values["accountID"] = uid
+	// Save it before we write to the response/return from the handler.
+	err = session.Save(r, w)
+	if err != nil {
+		return
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	http.SetCookie(w, &http.Cookie{
+		Name:   "db_user_id",
+		Value:  fmt.Sprint(uid),
+		Path:   "/",
+		MaxAge: 86400 * 30,
+	})
 
-	signToken, err = token.SignedString([]byte(os.Getenv("SECRET_KEY")))
 	return
 }
 

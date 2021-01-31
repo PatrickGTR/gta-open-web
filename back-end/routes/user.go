@@ -3,6 +3,7 @@ package routes
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
@@ -21,7 +22,6 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	// retrieve password from database
 	password := user.GetPassword(formUsername)
 	match := helper.ComparePassword(password, formPassword)
-
 	if password == "" || !match {
 		data := &Exception{
 			Code:    "login.wrong.password",
@@ -37,38 +37,63 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			fmt.Println(err.Error())
 		}
 
-		token, err := user.GenerateToken(uid)
-
+		err = user.GenerateSession(w, r, uid)
 		if err != nil {
 			fmt.Println(err.Error())
 		}
 
-		data := struct {
-			Code    string `json:"code"`
-			Message string `json:"msg"`
-			Token   string `json:"token"`
-		}{
+		data := &Exception{
 			Code:    "login.success",
 			Message: "You have successfully logged in",
-			Token:   token,
 		}
 
 		render.Status(r, http.StatusOK)
 		render.JSON(w, r, data)
 	}
+}
 
+func Logout(w http.ResponseWriter, r *http.Request) {
+
+	session, _ := user.Cookie.Get(r, "sessionid")
+
+	// no session id set
+	sessionContent := session.Values["accountID"]
+	if sessionContent == nil {
+		render.Status(r, http.StatusUnauthorized)
+		return
+	}
+
+	// account ID starts at 1
+	sessionUID := session.Values["accountID"].(int)
+	if sessionUID <= 0 {
+		render.Status(r, http.StatusUnauthorized)
+		return
+	}
+
+	session.Options.MaxAge = -1
+	session.Values["accountID"] = 0
+	session.Save(r, w)
+
+	http.SetCookie(w, &http.Cookie{
+		Name:   "db_user_id",
+		Value:  "",
+		Path:   "/",
+		MaxAge: -1,
+	})
+
+	render.Status(r, http.StatusOK)
 }
 
 func GetDataByUID(w http.ResponseWriter, r *http.Request) {
 
-	userid := chi.URLParam(r, "userid")
+	userid, _ := strconv.Atoi(chi.URLParam(r, "userid"))
 
 	query := `
 		SELECT
 			p.u_id,
 			p.username,
 			p.register_date,
-			p.last_login,
+			IFNULL(p.last_login, "N/A"),
 			ps.kills,
 			ps.deaths,
 			ps.money,
@@ -135,7 +160,7 @@ func GetDataByUID(w http.ResponseWriter, r *http.Request) {
 		render.Status(r, http.StatusBadRequest)
 		render.JSON(w, r, &Exception{
 			Code:    "no.rows",
-			Message: "User not found"},
+			Message: err.Error()},
 		)
 		return
 	}
