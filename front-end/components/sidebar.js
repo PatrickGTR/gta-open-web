@@ -1,6 +1,46 @@
 import LoginForm from "../components/loginform";
+import fetch from "isomorphic-fetch";
+import React, { useEffect, useState } from "react";
 
-const SideBar = () => {
+const SideBar = ({ response, data }) => {
+  const [serverData, setServerData] = useState({
+    HighestKill: "",
+    HighestDeaths: "",
+    HighestMoney: "",
+  });
+  useEffect(async () => {
+    let response, data;
+
+    // fetch highest kills
+    response = await fetch("http://localhost:8000/server/stats?type=1", {
+      method: "GET",
+      credential: "include",
+    });
+
+    data = await response.json();
+    const HighestKill = data.username;
+
+    // fetch highest money
+    response = await fetch("http://localhost:8000/server/stats?type=2", {
+      method: "GET",
+      credential: "include",
+    });
+
+    data = await response.json();
+    const HighestMoney = data.username;
+
+    // fetch highest deaths
+    response = await fetch("http://localhost:8000/server/stats?type=3", {
+      method: "GET",
+      credential: "include",
+    });
+
+    data = await response.json();
+    const HighestDeaths = data.username;
+
+    setServerData({ HighestKill, HighestDeaths, HighestMoney });
+  }, []);
+
   return (
     <div>
       <LoginForm />
@@ -22,15 +62,15 @@ const SideBar = () => {
           </tr>
           <tr>
             <td>Most Kills</td>
-            <td>IAlwaysKill</td>
+            <td>{serverData.HighestKill}</td>
           </tr>
           <tr>
             <td>Most Deaths</td>
-            <td>IAlwaysDie</td>
+            <td>{serverData.HighestDeaths}</td>
           </tr>
           <tr>
             <td>Most Money</td>
-            <td>IAmMadeOfMoney</td>
+            <td>{serverData.HighestMoney}</td>
           </tr>
         </tbody>
       </table>

@@ -4,36 +4,44 @@ import path from "path";
 import matter from "gray-matter";
 import Head from "next/head";
 import marked from "marked";
+import Layout from "../../components/layout";
 
 const Post = ({ htmlString, data }) => {
   return (
     <>
       <Head>
-        <title>{data.title}</title>
-        <meta title="description" content={data.description} />
+        <meta title={data.title} content={data.description} />
       </Head>
-      <div dangerouslySetInnerHTML={{ __html: htmlString }} />
+      <Layout>
+        <h1>{data.title}</h1>
+        <div className="author-date">
+          <div className="row">
+            <div className="column">Posted By: {data.author}</div>
+            <div className="column column-offset-40">Date: {data.date}</div>
+          </div>
+        </div>
+        <div dangerouslySetInnerHTML={{ __html: htmlString }} />
+      </Layout>
     </>
   );
 };
 
 export const getStaticPaths = async () => {
   const files = fs.readdirSync("posts");
-  console.log("files: ", files);
-  const paths = files.map(filename => ({
+
+  const paths = files.map((filename) => ({
     params: {
-      post: filename.replace(".md", "")
-    }
+      post: filename.replace(".md", ""),
+    },
   }));
 
   return {
     paths,
-    fallback: false
+    fallback: false,
   };
 };
 
 export const getStaticProps = async ({ params: { post } }) => {
-
   const markdownWithMetadata = fs
     .readFileSync(path.join("posts", post + ".md"))
     .toString();
@@ -45,8 +53,8 @@ export const getStaticProps = async ({ params: { post } }) => {
   return {
     props: {
       htmlString,
-      data: parsedMarkdown.data
-    }
+      data: parsedMarkdown.data,
+    },
   };
 };
 

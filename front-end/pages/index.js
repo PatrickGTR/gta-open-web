@@ -6,6 +6,7 @@ import marked from "marked";
 
 import SideBar from "../components/sidebar";
 import Layout from "../components/layout";
+import Link from "next/link";
 
 const Home = ({ posts }) => {
   return (
@@ -13,12 +14,17 @@ const Home = ({ posts }) => {
       <div className="row">
         <div className="home-content">
           {posts.map((post) => {
-            const mdData = matter(post);
+            const mdData = matter(post.content);
             const { date, author } = mdData.data;
             const { content } = mdData;
+
             return (
-              <div key={post}>
-                <h1>{mdData.data.title}</h1>
+              <div key={mdData.data.title}>
+                <Link href="blog/[post]" as={`/blog/${post.path}`}>
+                  <a>
+                    <h1>{mdData.data.title}</h1>
+                  </a>
+                </Link>
                 <div className="author-date">
                   <div className="row">
                     <div className="column">Posted By: {author}</div>
@@ -73,7 +79,10 @@ export const getStaticProps = async () => {
       .readFileSync(path.join("posts", file))
       .toString();
 
-    posts.push(markdownWithMetadata);
+    posts.push({
+      path: file.replace(".md", ""),
+      content: markdownWithMetadata,
+    });
   });
 
   return {

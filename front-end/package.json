@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "gray-matter": "^4.0.2",
+    "isomorphic-fetch": "^3.0.0",
     "marked": "^1.2.9",
     "next": "10.0.5",
     "react": "17.0.1",
