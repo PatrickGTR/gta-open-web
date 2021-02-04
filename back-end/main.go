@@ -6,7 +6,6 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/open-backend/routes"
 	"github.com/open-backend/user"
@@ -40,9 +39,9 @@ func main() {
 
 	// nested route
 	router.Route("/user", func(r chi.Router) {
-		r.Get("/{userid}", isLoggedIn(routes.GetDataByUID))
 		r.Post("/", routes.Login)
 		r.Delete("/", isLoggedIn(routes.Logout))
+		r.Get("/", isLoggedIn(routes.GetDataByUID))
 	})
 
 	PORT := 8000
@@ -65,16 +64,6 @@ func isLoggedIn(next http.HandlerFunc) http.HandlerFunc {
 		sessionUID := session.Values["accountID"].(int)
 		if sessionUID <= 0 {
 			render.Status(r, http.StatusUnauthorized)
-			return
-		}
-
-		// check validity of the uid cookie and compare with the session uid.
-		// just an extra check if uid cookie has been tampered.
-		cookieContent, _ := r.Cookie("db_user_id")
-		cookieUID, _ := strconv.Atoi(cookieContent.Value)
-		if cookieUID != sessionUID {
-			fmt.Println(cookieUID, sessionUID)
-			render.Status(r, http.StatusBadRequest)
 			return
 		}
 

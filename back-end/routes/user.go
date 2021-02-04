@@ -3,9 +3,7 @@ package routes
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 
-	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 	"github.com/open-backend/helper"
 	"github.com/open-backend/user"
@@ -74,98 +72,22 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	session.Values["accountID"] = 0
 	session.Save(r, w)
 
-	http.SetCookie(w, &http.Cookie{
-		Name:   "db_user_id",
-		Value:  "",
-		Path:   "/",
-		MaxAge: -1,
-	})
-
 	render.Status(r, http.StatusOK)
 }
 
 func GetDataByUID(w http.ResponseWriter, r *http.Request) {
 
-	userid, _ := strconv.Atoi(chi.URLParam(r, "userid"))
+	session, _ := user.Cookie.Get(r, "sessionid")
+	userid := session.Values["accountID"].(int)
 
-	query := `
-		SELECT
-			p.u_id,
-			p.username,
-			p.register_date,
-			IFNULL(p.last_login, "N/A"),
-			ps.kills,
-			ps.deaths,
-			ps.money,
-			ps.job_id,
-			ps.class_id,
-			ps.score,
-			ps.skin,
-			IFNULL(pi.crack, 0),
-			IFNULL(pi.weed, 0),
-			IFNULL(pi.picklock, 0),
-			IFNULL(pi.wallet, 0),
-			IFNULL(pi.rope, 0),
-			IFNULL(pi.condom, 0),
-			IFNULL(pi.scissors, 0)
-		FROM
-			players p
-		INNER JOIN
-			player_stats ps
-		ON
-			p.u_id = ps.u_id
-		LEFT JOIN
-			player_items pi
-		ON
-			p.u_id = pi.u_id
-		WHERE
-			p.u_id = ?
-		`
-
-	result, err := helper.ExecuteQuery(query, userid)
+	data, err := user.GetData(userid)
 	if err != nil {
 		render.Status(r, http.StatusBadRequest)
-		render.JSON(w, r, &Exception{
-			Code:    "mysql.error",
-			Message: fmt.Sprintf("%s", err),
-		})
-		return
-	}
-
-	var data user.Player
-	// store data
-	result.Next()
-	err = result.Scan(
-		&data.Account.UID,
-		&data.Account.Username,
-		&data.Account.Registered,
-		&data.Account.LastLogin,
-		&data.Stats.Kills,
-		&data.Stats.Deaths,
-		&data.Stats.Money,
-		&data.Stats.Job,
-		&data.Stats.Class,
-		&data.Stats.Score,
-		&data.Stats.Skin,
-		&data.Items.Crack,
-		&data.Items.Weed,
-		&data.Items.Picklock,
-		&data.Items.Wallet,
-		&data.Items.Rope,
-		&data.Items.Condom,
-		&data.Items.Scissors,
-	)
-	result.Close()
-	if err != nil {
-		render.Status(r, http.StatusBadRequest)
-		render.JSON(w, r, &Exception{
-			Code:    "no.rows",
-			Message: err.Error()},
-		)
 		return
 	}
 
 	render.JSON(w, r, &user.Player{Account: data.Account,
 		Stats: data.Stats,
 		Items: data.Items})
+	render.Status(r, http.StatusOK)
 }
