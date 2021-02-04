@@ -17,7 +17,6 @@ import (
 )
 
 func main() {
-
 	router := chi.NewRouter()
 
 	router.Use(cors.Handler(cors.Options{
@@ -39,9 +38,13 @@ func main() {
 
 	// nested route
 	router.Route("/user", func(r chi.Router) {
-		r.Post("/", routes.Login)
-		r.Delete("/", isLoggedIn(routes.Logout))
-		r.Get("/", isLoggedIn(routes.GetDataByUID))
+		r.Post("/", routes.Login)                   // Login
+		r.Delete("/", isLoggedIn(routes.Logout))    // Logout
+		r.Get("/", isLoggedIn(routes.GetDataByUID)) // Dashboard
+	})
+
+	router.Route("/server", func(r chi.Router) {
+		r.Get("/stats", routes.ServerStats)
 	})
 
 	PORT := 8000
@@ -51,22 +54,23 @@ func main() {
 
 func isLoggedIn(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// grab the content of the session.
 		session, _ := user.Cookie.Get(r, "sessionid")
-
-		// no session id set
 		sessionContent := session.Values["accountID"]
 		if sessionContent == nil {
+			// no session id set
 			render.Status(r, http.StatusUnauthorized)
 			return
 		}
 
-		// account ID starts at 1
 		sessionUID := session.Values["accountID"].(int)
 		if sessionUID <= 0 {
+			// account ID starts at 1
 			render.Status(r, http.StatusUnauthorized)
 			return
 		}
 
+		// proceed to the next route
 		next(w, r)
 	})
 }
