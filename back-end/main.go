@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/open-backend/routes"
+	"github.com/open-backend/api"
 	"github.com/open-backend/user"
 
 	"github.com/go-chi/chi"
@@ -38,15 +38,14 @@ func main() {
 
 	// nested route
 	router.Route("/user", func(r chi.Router) {
-		r.Post("/", routes.Login)                   // Login
-		r.Delete("/", isLoggedIn(routes.Logout))    // Logout
-		r.Get("/", isLoggedIn(routes.GetDataByUID)) // Dashboard
+		r.Post("/", api.VerifyUser)                      // Login
+		r.Delete("/", isLoggedIn(api.Logout))            // Logout
+		r.Get("/{userid}", isLoggedIn(api.GetDataByUID)) // Dashboard
 	})
 
 	router.Route("/server", func(r chi.Router) {
-		r.Get("/stats", routes.ServerStats)
+		r.Get("/stats", api.ServerStats)
 	})
-
 	PORT := 8000
 	fmt.Println("Web server is running on port", PORT)
 	http.ListenAndServe(fmt.Sprintf(":%d", PORT), router)

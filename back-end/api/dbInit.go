@@ -1,4 +1,4 @@
-package helper
+package api
 
 import (
 	"database/sql"
@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 
+	// make linter happy
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
 )
@@ -20,10 +21,10 @@ func init() {
 		log.Fatal("Error loading .env file")
 	}
 
-	mysqlHandle = InitDatabase()
+	mysqlHandle = initDB()
 }
 
-func InitDatabase() (db *sql.DB) {
+func initDB() (db *sql.DB) {
 
 	username := os.Getenv("MYSQL_USERNAME")
 	password := os.Getenv("MYSQL_PASSWORD")
@@ -38,6 +39,7 @@ func InitDatabase() (db *sql.DB) {
 	return db
 }
 
+// ExecuteQuery helper function
 func ExecuteQuery(query string, arg ...interface{}) (rows *sql.Rows, err error) {
 	rows, err = mysqlHandle.Query(query, arg...)
 	return

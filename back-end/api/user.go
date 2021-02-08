@@ -1,25 +1,25 @@
-package routes
+package api
 
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
+	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
-	"github.com/open-backend/helper"
 	"github.com/open-backend/user"
+	"github.com/open-backend/util"
 )
 
-// Exception alias of helper.MessageData
-type Exception helper.MessageData
-
-func Login(w http.ResponseWriter, r *http.Request) {
+// VerifyUser (/user - POST)
+func VerifyUser(w http.ResponseWriter, r *http.Request) {
 	// grab data from the body (form-data)
 	formUsername := r.FormValue("username")
 	formPassword := r.FormValue("password")
 
 	// retrieve password from database
-	password := user.GetPassword(formUsername)
-	match := helper.ComparePassword(password, formPassword)
+	password := getPasswordFromDB(formUsername)
+	match := util.ComparePassword(password, formPassword)
 	if password == "" || !match {
 		data := &Exception{
 			Code:    "login.wrong.password",
@@ -30,7 +30,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	} else {
 
-		uid, err := user.GetUID(formUsername)
+		uid, err := getUserID(formUsername)
 		if err != nil {
 			fmt.Println(err.Error())
 		}
@@ -50,43 +50,25 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Logout (/user - DELETE)
 func Logout(w http.ResponseWriter, r *http.Request) {
-
-	session, _ := user.Cookie.Get(r, "sessionid")
-
-	// no session id set
-	sessionContent := session.Values["accountID"]
-	if sessionContent == nil {
-		render.Status(r, http.StatusUnauthorized)
-		return
-	}
-
-	// account ID starts at 1
-	sessionUID := session.Values["accountID"].(int)
-	if sessionUID <= 0 {
-		render.Status(r, http.StatusUnauthorized)
-		return
-	}
-
-	session.Options.MaxAge = -1
-	session.Values["accountID"] = 0
-	session.Save(r, w)
-
+	user.DestroySession(w, r)
 	render.Status(r, http.StatusOK)
 }
 
+// GetDataByUID (/user/userid - GET)
+// grabs all the user data that will be shown in dashboard.
+// or other parts of the website.
 func GetDataByUID(w http.ResponseWriter, r *http.Request) {
-
-	session, _ := user.Cookie.Get(r, "sessionid")
-	userid := session.Values["accountID"].(int)
-
-	data, err := user.GetData(userid)
+	param := chi.URLParam(r, "userid")
+	userid, _ := strconv.Atoi(param)
+	data, err := getAllData(userid)
 	if err != nil {
 		render.Status(r, http.StatusBadRequest)
 		return
 	}
 
-	render.JSON(w, r, &user.Player{Account: data.Account,
+	render.JSON(w, r, &Player{Account: data.Account,
 		Stats: data.Stats,
 		Items: data.Items})
 	render.Status(r, http.StatusOK)

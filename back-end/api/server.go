@@ -1,27 +1,19 @@
-package routes
+package api
 
 import (
 	"net/http"
 	"strconv"
 
 	"github.com/go-chi/render"
-	"github.com/open-backend/server"
 )
 
+// ServerStats (/server/stats)
 func ServerStats(w http.ResponseWriter, r *http.Request) {
 	params := r.URL.Query()
-	option, _ := strconv.Atoi(params.Get("type"))
 
-	if option == 0 {
-		render.Status(r, http.StatusBadRequest)
-		render.JSON(w, r, &Exception{
-			Code:    "type.param.empty",
-			Message: "Invalid param type",
-		})
-		return
-	}
-
-	username, err := server.GetHighest(uint8(option))
+	dataType, _ := strconv.Atoi(params.Get("type"))
+	option, _ := strconv.Atoi(params.Get("option"))
+	data, err := getServerData(uint8(dataType), uint8(option))
 
 	if err != nil {
 		render.Status(r, http.StatusBadRequest)
@@ -33,9 +25,9 @@ func ServerStats(w http.ResponseWriter, r *http.Request) {
 	}
 
 	render.JSON(w, r, struct {
-		Username string `json:"username"`
+		Data interface{} `json:"value"`
 	}{
-		Username: username,
+		Data: data,
 	})
 	render.Status(r, http.StatusOK)
 	return

@@ -1,4 +1,16 @@
-package user
+package api
+
+import "github.com/open-backend/util"
+
+const (
+	highestKills  = 1
+	highestMoney  = 2
+	highestDeaths = 3
+)
+const (
+	dataHighest      = 1
+	dataTotalAccount = 2
+)
 
 //PlayerCore data
 type PlayerCore struct {
@@ -36,3 +48,6 @@ type Player struct {
 	Stats   PlayerStats `json:"stats"`
 	Items   PlayerItems `json:"items"`
 }
+
+// Exception alias for MessageData.
+type Exception util.MessageData
