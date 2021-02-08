@@ -1,5 +1,7 @@
 import Link from "next/link";
+import Router from "next/router";
 import useStore from "../store/user";
+import sendRequest from "../utils/sendRequest";
 
 const NavBar = () => {
   const isLoggedIn = useStore((state) => state.loginStatus);
@@ -23,13 +25,11 @@ const NavBar = () => {
 
   const LoggedUserNav = () => {
     const setLogin = useStore((state) => state.setLoginStatus);
-    const doLogout = () => {
+    const doLogout = (e) => {
+      e.preventDefault();
+      Router.push("/");
       setLogin(false);
-
-      fetch("http://localhost:8000/user/", {
-        method: "DELETE",
-        credentials: "include",
-      });
+      sendRequest("DELETE", "user");
     };
 
     return (

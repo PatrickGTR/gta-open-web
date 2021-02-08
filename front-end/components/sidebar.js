@@ -1,44 +1,43 @@
 import LoginForm from "../components/loginform";
-import fetch from "isomorphic-fetch";
 import React, { useEffect, useState } from "react";
+import sendRequest from "../utils/sendRequest";
 
 const SideBar = ({ response, data }) => {
   const [serverData, setServerData] = useState({
     HighestKill: "",
     HighestDeaths: "",
     HighestMoney: "",
+    RegisteredPlayers: 0,
   });
   useEffect(async () => {
     let response, data;
 
     // fetch highest kills
-    response = await fetch("http://localhost:8000/server/stats?type=1", {
-      method: "GET",
-      credential: "include",
-    });
-
+    response = await sendRequest("GET", "server/stats?type=1&option=1");
     data = await response.json();
-    const HighestKill = data.username;
+    const HighestKill = data.value;
 
     // fetch highest money
-    response = await fetch("http://localhost:8000/server/stats?type=2", {
-      method: "GET",
-      credential: "include",
-    });
-
+    response = await sendRequest("GET", "server/stats?type=1&option=2");
     data = await response.json();
-    const HighestMoney = data.username;
+    const HighestMoney = data.value;
 
     // fetch highest deaths
-    response = await fetch("http://localhost:8000/server/stats?type=3", {
-      method: "GET",
-      credential: "include",
-    });
-
+    response = await sendRequest("GET", "server/stats?type=1&option=3");
     data = await response.json();
-    const HighestDeaths = data.username;
+    const HighestDeaths = data.value;
 
-    setServerData({ HighestKill, HighestDeaths, HighestMoney });
+    //fetch total accounts
+    response = await sendRequest("GET", "server/stats?type=2");
+    data = await response.json();
+    const RegisteredPlayers = data.value;
+
+    setServerData({
+      HighestKill,
+      HighestDeaths,
+      HighestMoney,
+      RegisteredPlayers,
+    });
   }, []);
 
   return (
@@ -54,7 +53,7 @@ const SideBar = ({ response, data }) => {
           </tr>
           <tr>
             <td>Registered Users</td>
-            <td>123,000</td>
+            <td>{serverData.RegisteredPlayers}</td>
           </tr>
           <tr>
             <td>Banned Users</td>

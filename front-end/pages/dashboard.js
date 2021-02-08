@@ -3,6 +3,9 @@ import useStore from "../store/user";
 import Router from "next/router";
 import Layout from "../components/layout";
 
+import getCookie from "../utils/getcookie";
+import sendRequest from "../utils/sendRequest";
+
 const DashBoard = () => {
   const [userData, setUserData] = useState({});
   const [isLoading, setLoading] = useState(true);
@@ -15,11 +18,10 @@ const DashBoard = () => {
       return;
     }
 
-    const response = await fetch(`http://localhost:8000/user`, {
-      method: "GET",
-      credentials: "include",
-    });
-
+    const response = await sendRequest(
+      "GET",
+      `user/${getCookie("db_user_id")}`,
+    );
     if (response.status === 200) {
       const data = await response.json();
 
