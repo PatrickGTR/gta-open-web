@@ -3,30 +3,18 @@ import useStore from "../store/user";
 import Router from "next/router";
 import Layout from "../components/layout";
 
-import getCookie from "../utils/getcookie";
+import { parseCookie } from "../utils/cookie";
 import sendRequest from "../utils/sendRequest";
 
-const DashBoard = () => {
-  const [userData, setUserData] = useState({});
-  const [isLoading, setLoading] = useState(true);
-
+const DashBoard = ({ data }) => {
   const isLogged = useStore((state) => state.loginStatus);
 
-  useEffect(async () => {
+  // redirect user if there's  no localstorage
+  // or isLogged is not set to true.
+  useEffect(() => {
     if (!isLogged) {
       Router.push("/");
       return;
-    }
-
-    const response = await sendRequest(
-      "GET",
-      `user/${getCookie("db_user_id")}`,
-    );
-    if (response.status === 200) {
-      const data = await response.json();
-
-      setUserData(data);
-      setLoading(false);
     }
   }, []);
 
@@ -37,22 +25,22 @@ const DashBoard = () => {
           <tbody>
             <tr>
               <td>Account ID:</td>
-              <td>{userData.account.uid}</td>
+              <td>{data.account.uid}</td>
             </tr>
             <tr>
               <td>Register Date</td>
-              <td>{userData.account.register_date}</td>
+              <td>{data.account.register_date}</td>
             </tr>
             <tr>
               <td>Last Login</td>
-              <td>{userData.account.last_login}</td>
+              <td>{data.account.last_login}</td>
             </tr>
             <tr>
               <td>Skin</td>
               <td>
                 <img
                   width="121"
-                  src={`https://open.mp/images/skins/${userData.stats.skin}.png`}
+                  src={`https://open.mp/images/skins/${data.stats.skin}.png`}
                 />
               </td>
             </tr>
@@ -72,7 +60,7 @@ const DashBoard = () => {
           </tr>
         </thead>
         <tbody>
-          {Object.keys(userData.stats).map((key, value) => (
+          {Object.keys(data.stats).map((key, value) => (
             <tr key={key}>
               <td>{key.charAt(0).toUpperCase() + key.slice(1)}</td>
               <td>{value}</td>
@@ -93,7 +81,7 @@ const DashBoard = () => {
           </tr>
         </thead>
         <tbody>
-          {Object.keys(userData.items).map((key, value) => (
+          {Object.keys(data.items).map((key, value) => (
             <tr key={key}>
               <td>{key.charAt(0).toUpperCase() + key.slice(1)}</td>
               <td>{value}</td>
@@ -107,7 +95,7 @@ const DashBoard = () => {
   const DisplayInfo = () => {
     return (
       <>
-        <h2>{userData.account.username}</h2>
+        <h2>{data.account.username}</h2>
         <div className="row">
           <div className="column">
             <DisplayAccountData />
@@ -125,8 +113,8 @@ const DashBoard = () => {
 
   return (
     <Layout title="Dashboard">
-      {isLoading ? (
-        "Please wait... Loading user data"
+      {Object.keys(data) == 0 ? (
+        "There was an issue loading your data at the moment"
       ) : (
         <>
           <DisplayInfo />
@@ -134,6 +122,27 @@ const DashBoard = () => {
       )}
     </Layout>
   );
+};
+
+export const getServerSideProps = async (ctx) => {
+  const cookie = ctx.req.headers.cookie;
+
+  let data = {};
+  try {
+    const response = await sendRequest(
+      "GET",
+      `user/${parseCookie(cookie, "db_user_id")}`,
+      { headers: ctx.req ? { cookie: cookie } : undefined },
+    );
+
+    data = await response.json();
+  } catch {}
+
+  return {
+    props: {
+      data,
+    },
+  };
 };
 
 export default DashBoard;

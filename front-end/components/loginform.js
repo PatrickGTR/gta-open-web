@@ -21,24 +21,32 @@ const LoginForm = () => {
   const doLogin = async (e) => {
     e.preventDefault();
 
-    let formData = new FormData();
-    formData.append("username", accountDetails.username);
-    formData.append("password", accountDetails.password);
+    try {
+      let formData = new FormData();
+      formData.append("username", accountDetails.username);
+      formData.append("password", accountDetails.password);
 
-    const response = await fetch("http://localhost:8000/user/", {
-      method: "POST",
-      body: formData,
-      credentials: "include",
-    });
+      const response = await fetch("http://localhost:8000/user/", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
 
-    if (response.status === 200) {
-      setLogin(true);
+      if (response.status === 200) {
+        setLogin(true);
 
-      Router.push(`/dashboard`);
-      return;
+        Router.push(`/dashboard`);
+        return;
+      }
+
+      setErrorMesssage(
+        "Invalid credentials, try again with valid credentials.",
+      );
+    } catch {
+      setErrorMesssage(
+        "Could not connect to the API, please contact a developer.",
+      );
     }
-
-    setErrorMesssage("Invalid credentials, try again with valid credentials.");
   };
 
   return (
