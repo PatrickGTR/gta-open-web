@@ -22,13 +22,12 @@ const LoginForm = () => {
     e.preventDefault();
 
     try {
-      let formData = new FormData();
-      formData.append("username", accountDetails.username);
-      formData.append("password", accountDetails.password);
-
       const response = await fetch("http://localhost:8000/user/", {
         method: "POST",
-        body: formData,
+        body: JSON.stringify({
+          username: accountDetails.username,
+          password: accountDetails.password,
+        }),
         credentials: "include",
       });
 
