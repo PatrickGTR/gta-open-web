@@ -10,7 +10,7 @@ import Link from "next/link";
 
 const Home = ({ posts }) => {
   return (
-    <Layout title="GTA Open | Home">
+    <Layout title="Home">
       <div className="row">
         <div className="home-content">
           {posts.map((post) => {

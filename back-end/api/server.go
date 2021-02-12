@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -29,6 +30,43 @@ func ServerStats(w http.ResponseWriter, r *http.Request) {
 	}{
 		Data: data,
 	})
+	render.Status(r, http.StatusOK)
+	return
+}
+
+func BanList(w http.ResponseWriter, r *http.Request) {
+
+	query := `
+		SELECT
+			username,
+			admin,
+			reason,
+			DATE_FORMAT(ban_date, "%d %b %Y at %h:%i %p"),
+			DATE_FORMAT(unban_date, "%d %b %Y at %h:%i %p")
+		FROM
+			bans
+	`
+	result, err := ExecuteQuery(query)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	var bans = Bans{}
+	returnBans := []Bans{}
+	for result.Next() {
+		result.Scan(
+			&bans.Username,
+			&bans.BannedBy,
+			&bans.Reason,
+			&bans.BanDate,
+			&bans.UnbanDate)
+
+		returnBans = append(returnBans, bans)
+	}
+	result.Close()
+
+	render.JSON(w, r, returnBans)
 	render.Status(r, http.StatusOK)
 	return
 }

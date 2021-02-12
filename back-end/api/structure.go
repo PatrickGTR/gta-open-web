@@ -49,5 +49,14 @@ type Player struct {
 	Items   PlayerItems `json:"items"`
 }
 
+// Bans Structure
+type Bans struct {
+	Username  string `json:"username"`
+	BannedBy  string `json:"by"`
+	Reason    string `json:"reason"`
+	BanDate   string `json:"banDate"`
+	UnbanDate string `json:"unbanDate"`
+}
+
 // Exception alias for MessageData.
 type Exception util.MessageData

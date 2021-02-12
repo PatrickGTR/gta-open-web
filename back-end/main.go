@@ -45,6 +45,7 @@ func main() {
 
 	router.Route("/server", func(r chi.Router) {
 		r.Get("/stats", api.ServerStats)
+		r.Get("/banlist", api.BanList)
 	})
 	PORT := 8000
 	fmt.Println("Web server is running on port", PORT)

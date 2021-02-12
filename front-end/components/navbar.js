@@ -19,6 +19,9 @@ const NavBar = () => {
             <a>Forums</a>
           </Link>
         </li>
+        <li>
+          <Link href="/bans">Ban List</Link>
+        </li>
       </>
     );
   };
