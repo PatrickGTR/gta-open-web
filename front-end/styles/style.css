@@ -47,3 +47,22 @@ html,
   font-size: 12px;
   margin-bottom: 5px;
 }
+
+
+.media {
+  display: inline-block;
+  padding: 0;
+  margin: 0 1rem 0 0;
+}
+
+.media-thumbnail {
+  box-shadow: .5rem .5rem 1rem grey;
+}
+
+.media-caption {
+  text-align: left;
+  margin-bottom: 1rem;
+  width: 228px;
+}
+
+

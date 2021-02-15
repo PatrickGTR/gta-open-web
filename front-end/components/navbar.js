@@ -22,6 +22,9 @@ const NavBar = () => {
         <li>
           <Link href="/bans">Ban List</Link>
         </li>
+        <li>
+          <Link href="/media">Media</Link>
+        </li>
       </>
     );
   };
