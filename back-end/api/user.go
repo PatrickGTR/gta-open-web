@@ -27,7 +27,6 @@ func VerifyUser(w http.ResponseWriter, r *http.Request) {
 	decoder.DisallowUnknownFields() // catch unwanted fields
 	err := decoder.Decode(&bodyResponse)
 
-	fmt.Println(&bodyResponse)
 	if err != nil {
 		// bad json data has been passed
 		// could be unrecognized field.

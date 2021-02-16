@@ -47,6 +47,12 @@ func main() {
 		r.Get("/stats", api.ServerStats)
 		r.Get("/banlist", api.BanList)
 	})
+
+	router.Route("/media", func(r chi.Router) {
+		r.Post("/", api.MediaPost)
+		r.Get("/", api.MediaGetAll)
+	})
+
 	PORT := 8000
 	fmt.Println("Web server is running on port", PORT)
 	http.ListenAndServe(fmt.Sprintf(":%d", PORT), router)
