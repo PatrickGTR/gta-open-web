@@ -15,7 +15,7 @@ func MediaGetAll(w http.ResponseWriter, r *http.Request) {
 		SELECT
 			link,
 			author,
-			post_date,
+			TIMESTAMPDIFF(SECOND, post_date, NOW()),
 			views
 		FROM
 			web_media
