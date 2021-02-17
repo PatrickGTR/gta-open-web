@@ -60,7 +60,11 @@ const SideBar = () => {
           </tr>
           <tr>
             <td>Registered Users</td>
-            <td>{serverData.RegisteredPlayers === -1 && UNABLE_FETCH_ERR}</td>
+            <td>
+              {serverData.RegisteredPlayers === -1
+                ? UNABLE_FETCH_ERR
+                : serverData.RegisteredPlayers}
+            </td>
           </tr>
           <tr>
             <td>Banned Users</td>
