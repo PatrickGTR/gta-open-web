@@ -48,11 +48,12 @@ html,
   margin-bottom: 5px;
 }
 
-
 .media {
   display: inline-block;
   padding: 0;
-  margin: 0 1rem 0 0;
+  margin: 3rem 1rem 0 0;
+  width: 240px;
+  height: 227px;
 }
 
 .media-thumbnail {
@@ -62,7 +63,26 @@ html,
 .media-caption {
   text-align: left;
   margin-bottom: 1rem;
-  width: 228px;
+  width: inherit;
 }
 
+.button {
+  margin-right: 1rem;
+}
 
+.iframe-container {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  padding-top: 56.25%;
+}
+
+.iframe-responsive {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  width: 100%;
+  height: 100%;
+}
