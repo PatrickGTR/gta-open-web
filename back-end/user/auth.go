@@ -1,6 +1,7 @@
 package user
 
 import (
+	"errors"
 	"net/http"
 	"os"
 	"strconv"
@@ -15,6 +16,22 @@ func init() {
 	Cookie = sessions.NewCookieStore([]byte(os.Getenv("SECRET_KEY")))
 	Cookie.Options.Path = "/"
 	Cookie.Options.HttpOnly = true
+}
+
+func GetUIDFromSession(r *http.Request) (uid int, err error) {
+	session, _ := Cookie.Get(r, "sessionid")
+	sessionContent := session.Values["accountID"]
+	if sessionContent == nil {
+		err = errors.New("no session set")
+		return
+	}
+
+	uid = session.Values["accountID"].(int)
+	if uid <= 0 {
+		err = errors.New("invalid session userid <= 0")
+		return
+	}
+	return
 }
 
 func GenerateSession(w http.ResponseWriter, r *http.Request, uid int) (err error) {

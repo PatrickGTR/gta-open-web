@@ -49,8 +49,9 @@ func main() {
 	})
 
 	router.Route("/media", func(r chi.Router) {
-		r.Post("/", api.MediaPost)
+		r.Post("/", isLoggedIn(api.MediaPost))
 		r.Get("/", api.MediaGetAll)
+		r.Get("/{id}", api.MediaGetOne)
 	})
 
 	PORT := 8000
@@ -61,19 +62,9 @@ func main() {
 func isLoggedIn(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// grab the content of the session.
-		session, _ := user.Cookie.Get(r, "sessionid")
-		sessionContent := session.Values["accountID"]
-		if sessionContent == nil {
-			// no session id set
+		_, err := user.GetUIDFromSession(r)
+		if err != nil {
 			render.Status(r, http.StatusUnauthorized)
-			return
-		}
-
-		sessionUID := session.Values["accountID"].(int)
-		if sessionUID <= 0 {
-			// account ID starts at 1
-			render.Status(r, http.StatusUnauthorized)
-			return
 		}
 
 		// proceed to the next route
