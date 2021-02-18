@@ -1,18 +1,38 @@
-import { useRouter } from "next/router";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Layout from "../../components/layout";
 import sendRequest from "../../utils/sendRequest";
+import { formatSeconds } from "../../utils/formatSeconds";
 
-function SpecificMedia({ data }) {
+function SpecificMedia({ postid, post, commentData }) {
+  const [didClickComment, setClickComment] = useState(false); // button toggle when user clicks the text area
+  const [comment, setComment] = useState(""); // comment textbox
+  const [comments, setComments] = useState(commentData); // comment data coming from the API
+  const [isUpToDate, upToDate] = useState(true); // to update the section when this is called.
+
+  // increase views everytime this resets
+  useEffect(() => {
+    sendRequest("POST", "media/add_views", {
+      body: JSON.stringify({ mediaid: postid }),
+    });
+  }, []);
+
+  useEffect(async () => {
+    const response = await sendRequest("GET", `media/comment/${postid}`);
+    const data = await response.json();
+
+    setComments(data);
+    upToDate(true);
+  }, [isUpToDate]);
+
   return (
-    <Layout title="Viewing specific media">
+    <Layout title={post.title}>
       <div className="row">
         <div className="column column-67">
           <div className="iframe-container">
             <iframe
               src={
                 `https://www.youtube.com/embed/` +
-                data.youtubeLink.split("=")[1]
+                post.youtubeLink.split("=")[1]
               }
               className="iframe-responsive"
               frameBorder="0"
@@ -21,53 +41,74 @@ function SpecificMedia({ data }) {
           </div>
           <div style={{ marginTop: "5rem" }}>
             <h4>
-              <strong>{data.title}</strong>
+              <strong>{post.title}</strong>
             </h4>
             <p>
-              {data.views} {data.views > 1 ? `views` : `view`} |{" "}
-              {data.datePosted}
+              {post.views +
+                ` ${post.views > 1 ? `views` : `view`}` +
+                " | " +
+                post.datePosted}
             </p>
-            <a>{data.author}</a>
+            <a>{post.author}</a>
           </div>
         </div>
         <div className="column column-33">
           <h3>Comments</h3>
           <hr />
           <div style={{ fontSize: "1.3rem" }}>
-            <p>
-              <strong>Patrick</strong> <i>1 day ago</i> <br />
-              Cool Video Bro!
-            </p>
-            <p>
-              <strong>VeryLongUser</strong> <i>1 month ago</i> <br />
-              Song name?
-            </p>
-            <p>
-              <strong>Syntax</strong> <i>1 month ago</i> <br />
-              This is a test comment Very long ass comment lol
-            </p>
-            <p>
-              <strong>Syntax</strong> <i>1 month ago</i> <br />
-              You're so trash, get a better gameplay kiddo.
-            </p>
-            <p>
-              <strong>Syntax</strong> <i>1 month ago</i> <br />
-              SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM
-              SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM
-              SPAM SPAM SPAM SPAM SPAM SPAM
-            </p>
-            <p>
-              <strong>Syntax</strong> <i>1 month ago</i> <br />
-              This is a test comment
-            </p>
-            <p>
-              <strong>Syntax</strong> <i>1 month ago</i> <br />
-              This is a test comment
-            </p>
-            <p>
-              <strong>Syntax</strong> <i>1 month ago</i> <br />
-              This is a test comment
-            </p>
+            <form>
+              <textarea
+                style={{ resize: "none" }}
+                placeholder="Add a public comment..."
+                onClick={(e) => {
+                  e.preventDefault();
+                  setClickComment(true);
+                }}
+                onChange={(e) => {
+                  e.preventDefault();
+                  setComment(e.target.value);
+                }}
+              />
+
+              {didClickComment && (
+                <div style={{ textAlign: "right" }}>
+                  <a
+                    className="button button-clear"
+                    onClick={(e) => setClickComment(false)}
+                  >
+                    Cancel
+                  </a>
+                  <a
+                    className="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+
+                      upToDate(false);
+                      sendRequest("POST", "media/comment", {
+                        body: JSON.stringify({
+                          mediaid: postid,
+                          comment: comment,
+                        }),
+                      });
+                    }}
+                  >
+                    Comment
+                  </a>
+                </div>
+              )}
+            </form>
+            {comments.length ? (
+              comments.map((comment, index) => (
+                <p key={index}>
+                  <strong>{comment.author}</strong>{" "}
+                  <i>{formatSeconds(comment.datePosted) + " ago"}</i>
+                  <br />
+                  {comment.comment}
+                </p>
+              ))
+            ) : (
+              <p>This post has 0 comments</p>
+            )}
           </div>
         </div>
       </div>
@@ -78,12 +119,17 @@ function SpecificMedia({ data }) {
 export const getServerSideProps = async (ctx) => {
   const postid = ctx.query.id;
 
-  const response = await sendRequest("GET", `media/${postid}`);
-  const data = await response.json();
+  const postResponse = await sendRequest("GET", `media/${postid}`);
+  const post = await postResponse.json();
+
+  const commentResponse = await sendRequest("GET", `media/comment/${postid}`);
+  const comments = await commentResponse.json();
 
   return {
     props: {
-      data,
+      postid,
+      post,
+      commentData: comments,
     },
   };
 };

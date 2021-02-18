@@ -129,11 +129,9 @@ export const getServerSideProps = async (ctx) => {
 
   let data = {};
   try {
-    const response = await sendRequest(
-      "GET",
-      `user/${parseCookie(cookie, "db_user_id")}`,
-      { headers: ctx.req ? { cookie: cookie } : undefined },
-    );
+    const response = await sendRequest("GET", `user`, {
+      headers: ctx.req ? { cookie: cookie } : undefined,
+    });
 
     data = await response.json();
   } catch {}
