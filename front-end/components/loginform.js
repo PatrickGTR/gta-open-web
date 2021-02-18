@@ -1,12 +1,13 @@
 import Router from "next/router";
 import { useState } from "react";
+import { useToasts } from "react-toast-notifications";
 import useStore from "../store/user";
+import sendRequest from "../utils/sendRequest";
 
 const LoginForm = () => {
   const setLogin = useStore((state) => state.setLoginStatus);
-  const isLoggedIn = useStore((state) => state.loginStatus);
-
-  const [errorMessage, setErrorMesssage] = useState(null);
+  const isLoggedIn = useStore((state) => state.getloginStatus);
+  const { addToast } = useToasts();
 
   const [accountDetails, setAccountDetails] = useState({
     username: "",
@@ -22,29 +23,31 @@ const LoginForm = () => {
     e.preventDefault();
 
     try {
-      const response = await fetch("http://localhost:8000/user/", {
-        method: "POST",
+      const response = await sendRequest("POST", "user", {
         body: JSON.stringify({
           username: accountDetails.username,
           password: accountDetails.password,
         }),
-        credentials: "include",
       });
 
+      const { msg } = await response.json();
       if (response.status === 200) {
         setLogin(true);
 
+        addToast(msg, {
+          appearance: "success",
+        });
         Router.push(`/dashboard`);
+      } else {
+        addToast(msg, {
+          appearance: "error",
+        });
         return;
       }
-
-      setErrorMesssage(
-        "Invalid credentials, try again with valid credentials.",
-      );
-    } catch {
-      setErrorMesssage(
-        "Could not connect to the API, please contact a developer.",
-      );
+    } catch (e) {
+      addToast("Could not connect to the API, please contact a developer.", {
+        appearance: "error",
+      });
     }
   };
 
@@ -59,16 +62,13 @@ const LoginForm = () => {
             placeholder="Username"
             onChange={onChange}
           />
-
           <label>Password</label>
-          <h6 className="error-msg">{errorMessage !== null && errorMessage}</h6>
           <input
             name="password"
             type="password"
             placeholder="Passowrd"
             onChange={onChange}
           />
-
           <input
             className="button-primary"
             type="submit"

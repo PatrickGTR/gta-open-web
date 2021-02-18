@@ -5,7 +5,7 @@ import { ToastProvider } from "react-toast-notifications";
 function MyApp({ Component, pageProps }) {
   return (
     <ToastProvider autoDismiss={true} placement={"bottom-right"}>
-      <Component {...pageProps} />;
+      <Component {...pageProps} />
     </ToastProvider>
   );
 }

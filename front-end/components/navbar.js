@@ -2,53 +2,45 @@ import Link from "next/link";
 import Router from "next/router";
 import useStore from "../store/user";
 import sendRequest from "../utils/sendRequest";
+const LoggedUserNav = () => {
+  const setLogin = useStore((state) => state.setLoginStatus);
+  const doLogout = (e) => {
+    e.preventDefault();
+    Router.push("/");
+    setLogin(false);
+    sendRequest("DELETE", "user");
+  };
+  return (
+    <>
+      <li>
+        <Link href="/dashboard">Dashboard</Link>
+      </li>
+      <li>
+        <Link href="/" onClick={doLogout}>
+          Logout
+        </Link>
+      </li>
+    </>
+  );
+};
 
 const NavBar = () => {
-  const isLoggedIn = useStore((state) => state.loginStatus);
+  const isLoggedIn = useStore((state) => state.getLoginStatus);
 
   const GlobalNav = () => {
     return (
       <>
         <li>
-          <Link href="/">
-            <a>Home</a>
-          </Link>
+          <Link href="/">Home</Link>
         </li>
         <li>
-          <Link href="/">
-            <a>Forums</a>
-          </Link>
+          <Link href="/">Forums</Link>
         </li>
         <li>
           <Link href="/bans">Ban List</Link>
         </li>
         <li>
           <Link href="/media">Media</Link>
-        </li>
-      </>
-    );
-  };
-
-  const LoggedUserNav = () => {
-    const setLogin = useStore((state) => state.setLoginStatus);
-    const doLogout = (e) => {
-      e.preventDefault();
-      Router.push("/");
-      setLogin(false);
-      sendRequest("DELETE", "user");
-    };
-
-    return (
-      <>
-        <li>
-          <Link href="/dashboard">
-            <a>Dashboard</a>
-          </Link>
-        </li>
-        <li>
-          <Link href="/">
-            <a onClick={doLogout}>Logout</a>
-          </Link>
         </li>
       </>
     );
