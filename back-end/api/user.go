@@ -89,6 +89,21 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+func GetSelfData(w http.ResponseWriter, r *http.Request) {
+	userid, _ := user.GetUIDFromSession(r)
+	data, err := getAllData(userid)
+	if err != nil {
+		render.Status(r, http.StatusBadRequest)
+		return
+	}
+
+	render.JSON(w, r, &Player{Account: data.Account,
+		Stats: data.Stats,
+		Items: data.Items})
+	render.Status(r, http.StatusOK)
+	return
+}
+
 // GetDataByUID (/user/userid - GET)
 // grabs all the user data that will be shown in dashboard.
 func GetDataByUID(w http.ResponseWriter, r *http.Request) {

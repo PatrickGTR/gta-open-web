@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -12,11 +11,115 @@ import (
 	"github.com/open-backend/user"
 )
 
+func MediaIncrementViews(w http.ResponseWriter, r *http.Request) {
+	bodyResponse := struct {
+		MediaID string `json:"mediaid"`
+	}{}
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields() // catch unwanted fields
+	err := decoder.Decode(&bodyResponse)
+
+	if err != nil {
+		// bad json data has been passed
+		// could be unrecognized field.
+		render.Status(r, http.StatusBadRequest)
+		render.JSON(w, r, &Exception{
+			Code:    "bad.data.passed",
+			Message: err.Error(),
+		})
+		return
+	}
+
+	query := `
+		UPDATE
+			web_media
+		SET
+			views = views + 1
+		WHERE
+			postid = ?
+	`
+	ExecuteQuery(query, bodyResponse.MediaID)
+	return
+}
+
+func MediaPostComment(w http.ResponseWriter, r *http.Request) {
+	bodyResponse := struct {
+		MediaID string `json:"mediaid"`
+		Comment string `json:"comment"`
+	}{}
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields() // catch unwanted fields
+	err := decoder.Decode(&bodyResponse)
+
+	if err != nil {
+		// bad json data has been passed
+		// could be unrecognized field.
+		render.Status(r, http.StatusBadRequest)
+		render.JSON(w, r, &Exception{
+			Code:    "bad.data.passed",
+			Message: err.Error(),
+		})
+		return
+	}
+	// get the name based on account id
+	var author string
+	userid, _ := user.GetUIDFromSession(r)
+	result, _ := ExecuteQuery("SELECT username FROM players WHERE u_id = ?", userid)
+	result.Next()
+	result.Scan(&author)
+	result.Close()
+
+	query :=
+		`
+		INSERT INTO
+			web_media_posts (mediaid, author, comment)
+		VALUES
+			(?, ?, ?)
+	`
+	_, err = ExecuteQuery(query, bodyResponse.MediaID, author, bodyResponse.Comment)
+	return
+}
+
+func MediaGetComments(w http.ResponseWriter, r *http.Request) {
+	param := chi.URLParam(r, "mediaid")
+	id, _ := strconv.Atoi(param)
+
+	query := `
+		SELECT
+			author,
+			comment,
+			TIMESTAMPDIFF(SECOND, post_date, NOW())
+		FROM
+			web_media_posts
+		WHERE
+			mediaid = ?
+		ORDER BY
+			postid
+		DESC
+	`
+	result, err := ExecuteQuery(query, id)
+
+	if err != nil {
+		render.Status(r, http.StatusBadRequest)
+		return
+	}
+
+	comment := mediaComments{}
+	comments := []mediaComments{}
+
+	for result.Next() {
+		result.Scan(&comment.Author, &comment.Comment, &comment.Date)
+		comments = append(comments, comment)
+	}
+	result.Close()
+
+	render.JSON(w, r, comments)
+	return
+}
+
 func MediaGetOne(w http.ResponseWriter, r *http.Request) {
 	param := chi.URLParam(r, "id")
 	id, _ := strconv.Atoi(param)
-
-	fmt.Println(id)
 
 	query := `
 	SELECT

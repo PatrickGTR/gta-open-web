@@ -4,8 +4,6 @@ import (
 	"errors"
 	"net/http"
 	"os"
-	"strconv"
-	"time"
 
 	"github.com/gorilla/sessions"
 )
@@ -35,14 +33,6 @@ func GetUIDFromSession(r *http.Request) (uid int, err error) {
 }
 
 func GenerateSession(w http.ResponseWriter, r *http.Request, uid int) (err error) {
-	// 90 days expiration
-	expiration := time.Now().Add((time.Hour * 24) * 3)
-	http.SetCookie(w, &http.Cookie{
-		Name:    "db_user_id",
-		Value:   strconv.Itoa(uid),
-		Path:    "/",
-		Expires: expiration,
-	})
 
 	session, _ := Cookie.Get(r, "sessionid")
 	session.Values["accountID"] = uid
@@ -55,11 +45,6 @@ func GenerateSession(w http.ResponseWriter, r *http.Request, uid int) (err error
 }
 
 func DestroySession(w http.ResponseWriter, r *http.Request) {
-	http.SetCookie(w, &http.Cookie{
-		Name:   "db_user_id",
-		Path:   "/",
-		MaxAge: -1,
-	})
 
 	session, _ := Cookie.Get(r, "sessionid")
 	session.Options.MaxAge = -1

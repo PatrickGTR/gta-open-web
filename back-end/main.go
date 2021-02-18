@@ -38,9 +38,9 @@ func main() {
 
 	// nested route
 	router.Route("/user", func(r chi.Router) {
-		r.Post("/", api.VerifyUser)                      // Login
-		r.Delete("/", isLoggedIn(api.Logout))            // Logout
-		r.Get("/{userid}", isLoggedIn(api.GetDataByUID)) // Dashboard
+		r.Post("/", api.VerifyUser)             // Login
+		r.Delete("/", isLoggedIn(api.Logout))   // Logout
+		r.Get("/", isLoggedIn(api.GetSelfData)) // Dashboard
 	})
 
 	router.Route("/server", func(r chi.Router) {
@@ -52,6 +52,12 @@ func main() {
 		r.Post("/", isLoggedIn(api.MediaPost))
 		r.Get("/", api.MediaGetAll)
 		r.Get("/{id}", api.MediaGetOne)
+		r.Post("/add_views", api.MediaIncrementViews)
+
+		// comment API
+		r.Post("/comment", isLoggedIn(api.MediaPostComment))
+		r.Get("/comment/{mediaid}", api.MediaGetComments)
+
 	})
 
 	PORT := 8000

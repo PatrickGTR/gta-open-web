@@ -9,6 +9,12 @@ type mediaBody struct {
 	Views  int    `json:"views"`
 }
 
+type mediaComments struct {
+	Author  string `json:"author"`
+	Comment string `json:"comment"`
+	Date    string `json:"datePosted"`
+}
+
 func insertMediaToDB(link string, title string, author string) (err error) {
 	query := `INSERT INTO web_media (link, title, author) VALUES (?, ?, ?)`
 	_, err = ExecuteQuery(query, link, title, author)
