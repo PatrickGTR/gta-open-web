@@ -14,6 +14,7 @@ func init() {
 	Cookie = sessions.NewCookieStore([]byte(os.Getenv("SECRET_KEY")))
 	Cookie.Options.Path = "/"
 	Cookie.Options.HttpOnly = true
+
 }
 
 func GetUIDFromSession(r *http.Request) (uid int, err error) {

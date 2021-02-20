@@ -1,0 +1,50 @@
+version: "3.8"
+services:
+  reverse-proxy:
+    # The official v2 Traefik docker image
+    image: traefik:v2.2
+    # Enables the web UI and tells Traefik to listen to docker
+    command:
+      - "--api.insecure=true"
+      - "--api.dashboard=true"
+      - "--providers.docker"
+      - "--providers.docker.exposedByDefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.myresolver.acme.httpchallenge=true"
+      - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
+      - "--certificatesresolvers.myresolver.acme.email=patricksubang@pm.me"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+    ports:
+      # The HTTP port
+      - "80:80"
+      # The Web UI (enabled by --api.insecure=true)
+      - "8080:8080"
+      # https
+      - "443:443"
+    volumes:
+      # So that Traefik can listen to the Docker events
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./letsencrypt:/letsencryp"
+  api-server:
+    build:
+      context: ./
+      target: builder
+    image: api_server
+    expose:
+      - "8000"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.middlewares.myredirect.redirectscheme.scheme=https"
+      - "traefik.routers.api.middlewares=myredirect"
+      - "traefik.http.routers.api.rule=Host(`vps-bd1b8740.vps.ovh.net`)"
+      - "traefik.http.routers.api.entrypoints=web"
+      - "traefik.http.routers.api-secure.rule=Host(`vps-bd1b8740.vps.ovh.net`)"
+      - "traefik.http.routers.api-secure.entrypoints=websecure"
+      - "traefik.http.routers.api-secure.tls.certresolver=myresolver"
+      - "traefik.http.routers.api-secure.tls=true"
+    volumes:
+      - ./:/go/src/app
+    # have to use $$ (double-dollar) so docker doesn't try to substitute a variable
+    command: reflex -r "\.go$$" -s -- sh -c "go run ./"
