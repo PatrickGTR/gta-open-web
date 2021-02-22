@@ -54,7 +54,7 @@ function SpecificMedia({ postid, post, commentData }) {
         </div>
         <div className="column column-33">
           <h3>Comments</h3>
-          <hr />
+          <hr style={{ marginTop: "1rem", marginBottom: "1rem" }} />
           <div style={{ fontSize: "1.3rem" }}>
             <form>
               <textarea

@@ -6,7 +6,7 @@ import sendRequest from "../utils/sendRequest";
 
 const LoginForm = () => {
   const setLogin = useStore((state) => state.setLoginStatus);
-  const isLoggedIn = useStore((state) => state.getloginStatus);
+  const isLoggedIn = useStore((state) => state.loginStatus);
   const { addToast } = useToasts();
 
   const [accountDetails, setAccountDetails] = useState({

@@ -2,49 +2,51 @@ import Link from "next/link";
 import Router from "next/router";
 import useStore from "../store/user";
 import sendRequest from "../utils/sendRequest";
+
+const GlobalNav = () => {
+  return (
+    <>
+      <li>
+        <Link href="/">Home</Link>
+      </li>
+      <li>
+        <Link href="/">Forums</Link>
+      </li>
+      <li>
+        <Link href="/bans">Ban List</Link>
+      </li>
+      <li>
+        <Link href="/media">Media</Link>
+      </li>
+    </>
+  );
+};
 const LoggedUserNav = () => {
-  const setLogin = useStore((state) => state.setLoginStatus);
+  const setLoginStatus = useStore((state) => state.setLoginStatus);
+
   const doLogout = (e) => {
     e.preventDefault();
     Router.push("/");
-    setLogin(false);
     sendRequest("DELETE", "user");
+    setLoginStatus(false);
   };
+
   return (
     <>
       <li>
         <Link href="/dashboard">Dashboard</Link>
       </li>
       <li>
-        <Link href="/" onClick={doLogout}>
+        <a href="" onClick={doLogout}>
           Logout
-        </Link>
+        </a>
       </li>
     </>
   );
 };
 
 const NavBar = () => {
-  const isLoggedIn = useStore((state) => state.getLoginStatus);
-
-  const GlobalNav = () => {
-    return (
-      <>
-        <li>
-          <Link href="/">Home</Link>
-        </li>
-        <li>
-          <Link href="/">Forums</Link>
-        </li>
-        <li>
-          <Link href="/bans">Ban List</Link>
-        </li>
-        <li>
-          <Link href="/media">Media</Link>
-        </li>
-      </>
-    );
-  };
+  const isLoggedIn = useStore((state) => state.loginStatus);
 
   return (
     <header className="header">

@@ -6,10 +6,9 @@ const useStore = create(
     (set) => ({
       loginStatus: false,
       setLoginStatus: (toggle) => set({ loginStatus: toggle }),
-      getLoginStatus: () => loginStatus,
     }),
     {
-      name: "persisted-state",
+      name: "storage",
       getStorage: () => localStorage,
     },
   ),

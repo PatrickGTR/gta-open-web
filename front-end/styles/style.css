@@ -56,6 +56,10 @@ html,
   height: 227px;
 }
 
+.media:hover  {
+  cursor: pointer;
+}
+
 .media-thumbnail {
   box-shadow: .5rem .5rem 1rem grey;
 }

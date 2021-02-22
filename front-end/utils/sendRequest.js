@@ -1,11 +1,13 @@
 const sendRequest = async (method, endpoint, custom) => {
-  const isProd = !process.env.DEV
-    ? "http://vps-bd1b8740.vps.ovh.net:8000/"
-    : "http://localhost:8000/";
+  const isProd =
+    process.env.NODE_ENV === "development"
+      ? "http://localhost:8000/"
+      : "https://gta-open.ga/";
 
   const url = isProd + endpoint;
   const response = await fetch(url, {
     method: method,
+    mode: "cors",
     credentials: "include",
     ...custom,
   });
