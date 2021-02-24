@@ -20,7 +20,6 @@ html,
 }
 
 .home-content p {
-  display: grid;
   font-size: 14px;
 }
 
@@ -28,7 +27,7 @@ html,
   border-left: 4px solid grey;
   padding: 0 1rem;
   margin-bottom: 10px;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .container {
