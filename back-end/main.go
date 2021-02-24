@@ -27,9 +27,9 @@ func main() {
 
 	router.Use(cors.Handler(cors.Options{
 		AllowedOrigins: []string{
-			"http://localhost:3000", // localhost, development mainly in // npm run dev
-			"http://vps-bd1b8740.vps.ovh.net",
-			"https://vps-bd1b8740.vps.ovh.net",
+			"http://localhost:3000",                                // localhost, development mainly in // npm run dev
+			"https://gta-open-i9nn4vr9u-patricksubang.vercel.app",  // live demo, preview
+			"https://gta-open-i9nn4vr9u-patricksubang.vercel.app/", // live demo, preview
 		},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},

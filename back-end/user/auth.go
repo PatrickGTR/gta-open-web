@@ -14,6 +14,13 @@ func init() {
 	Cookie = sessions.NewCookieStore([]byte(os.Getenv("SECRET_KEY")))
 	Cookie.Options.Path = "/"
 	Cookie.Options.HttpOnly = true
+	Cookie.Options.SameSite = http.SameSiteNoneMode
+
+	state := false
+	if os.Getenv("ENV") == "PROD" {
+		state = true
+	}
+	Cookie.Options.Secure = state
 
 }
 

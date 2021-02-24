@@ -5,6 +5,7 @@ services:
     image: traefik:v2.2
     # Enables the web UI and tells Traefik to listen to docker
     command:
+      - "--log.level=DEBUG"
       - "--api.insecure=true"
       - "--api.dashboard=true"
       - "--providers.docker"
@@ -12,10 +13,11 @@ services:
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
       - "--certificatesresolvers.myresolver.acme.httpchallenge=true"
-      - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
-      - "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
+        #- "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
       - "--certificatesresolvers.myresolver.acme.email=patricksubang@pm.me"
       - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+        # - "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
     ports:
       # The HTTP port
       - "80:80"
@@ -25,22 +27,28 @@ services:
       - "443:443"
     volumes:
       # So that Traefik can listen to the Docker events
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./letsencrypt:/letsencryp"
-  api-server:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "./letsencrypt:/letsencrypt"
+  server:
     build:
       context: ./
       target: builder
     image: api_server
     expose:
       - "8000"
+    environment:
+      - MYSQL_SERVER=${MYSQL_SERVER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_USERNAME=${MYSQL_USERNAME}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - SECRET_KEY=${SECRET_KEY}
     labels:
       - "traefik.enable=true"
       - "traefik.http.middlewares.myredirect.redirectscheme.scheme=https"
-      - "traefik.routers.api.middlewares=myredirect"
-      - "traefik.http.routers.api.rule=Host(`vps-bd1b8740.vps.ovh.net`)"
+      - "traefik.http.routers.api.middlewares=myredirect"
+      - "traefik.http.routers.api.rule=Host(`gta-open.ga`)"
       - "traefik.http.routers.api.entrypoints=web"
-      - "traefik.http.routers.api-secure.rule=Host(`vps-bd1b8740.vps.ovh.net`)"
+      - "traefik.http.routers.api-secure.rule=Host(`gta-open.ga`)"
       - "traefik.http.routers.api-secure.entrypoints=websecure"
       - "traefik.http.routers.api-secure.tls.certresolver=myresolver"
       - "traefik.http.routers.api-secure.tls=true"
