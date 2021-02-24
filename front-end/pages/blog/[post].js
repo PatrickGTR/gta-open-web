@@ -2,17 +2,13 @@ import React from "react";
 import fs from "fs";
 import path from "path";
 import matter from "gray-matter";
-import Head from "next/head";
 import marked from "marked";
 import Layout from "../../components/layout";
 
 const Post = ({ htmlString, data }) => {
   return (
     <>
-      <Head>
-        <meta title={data.title} content={data.description} />
-      </Head>
-      <Layout>
+      <Layout title={data.title}>
         <h1>{data.title}</h1>
         <div className="author-date">
           <div className="row">

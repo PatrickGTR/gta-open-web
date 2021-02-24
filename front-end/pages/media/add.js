@@ -16,6 +16,16 @@ function AddMedia() {
   const onSubmit = async (e) => {
     e.preventDefault();
 
+    if (inputData.link === "") {
+      addToast("Youtube link is required!", { appearance: "error" });
+      return;
+    }
+
+    if (inputData.title === "") {
+      addToast("Title is required!", { appearance: "error" });
+      return;
+    }
+
     try {
       const response = await sendRequest("POST", "media", {
         body: JSON.stringify({
@@ -26,13 +36,23 @@ function AddMedia() {
 
       const data = await response.json();
 
-      console.log(data);
-
       // Redirect user back to '/media' page.
       // on success
       if (response.status === 200) {
         addToast(data.msg, { appearance: "success" });
         Router.push("/media");
+      } else {
+        if (data.code === "internal.error") {
+          addToast(
+            `${data.msg} Make sure your youtube link is not a playlist`,
+            {
+              appearance: "error",
+            },
+          );
+          return;
+        }
+
+        addToast(data.msg, { appearance: "error" });
       }
     } catch (e) {
       console.log(e);

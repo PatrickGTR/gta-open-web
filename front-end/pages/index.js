@@ -7,19 +7,20 @@ import marked from "marked";
 import SideBar from "../components/sidebar";
 import Layout from "../components/layout";
 import Link from "next/link";
+import sendRequest from "../utils/sendRequest";
 
-const Home = ({ posts }) => {
+const Home = ({ stats, posts }) => {
   return (
     <Layout title="Home">
       <div className="row">
-        <div className="home-content">
-          {posts.map((post) => {
+        <div className="column column-67 home-content">
+          {posts.map((post, index) => {
             const mdData = matter(post.content);
             const { date, author } = mdData.data;
             const { content } = mdData;
 
             return (
-              <div key={mdData.data.title}>
+              <div key={index}>
                 <Link href="blog/[post]" as={`/blog/${post.path}`}>
                   <a>
                     <h1>{mdData.data.title}</h1>
@@ -61,8 +62,8 @@ const Home = ({ posts }) => {
           })}
         </div>
 
-        <div className="column column-offset-5">
-          <SideBar />
+        <div className="column">
+          <SideBar stats={stats} />
         </div>
       </div>
     </Layout>
@@ -85,9 +86,43 @@ export const getStaticProps = async () => {
     });
   });
 
+  let serverStats = {};
+  try {
+    let response, data;
+    // fetch highest kills
+    response = await sendRequest("GET", "server/stats?type=1&option=1");
+    data = await response.json();
+    serverStats = { ...serverStats, highestKill: data.value };
+
+    // fetch highest money
+    response = await sendRequest("GET", "server/stats?type=1&option=2");
+    data = await response.json();
+    serverStats = { ...serverStats, highestMoney: data.value };
+
+    // fetch highest deaths
+    response = await sendRequest("GET", "server/stats?type=1&option=3");
+    data = await response.json();
+    serverStats = {
+      ...serverStats,
+      highestDeaths: data.value,
+    };
+
+    //fetch total accounts
+    response = await sendRequest("GET", "server/stats?type=2");
+    data = await response.json();
+    serverStats = { ...serverStats, playerCount: data.value };
+  } catch (e) {
+    // write a proper logging
+    console.log(
+      "an error was caught trying to fetch server data, please check logs",
+      e,
+    );
+  }
+
   return {
     props: {
       posts,
+      stats: serverStats,
     },
   };
 };

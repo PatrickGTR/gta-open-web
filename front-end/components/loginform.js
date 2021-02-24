@@ -54,28 +54,30 @@ const LoginForm = () => {
   return (
     <>
       {!isLoggedIn && (
-        <form>
-          <label>Username</label>
-          <input
-            name="username"
-            type="text"
-            placeholder="Username"
-            onChange={onChange}
-          />
-          <label>Password</label>
-          <input
-            name="password"
-            type="password"
-            placeholder="Passowrd"
-            onChange={onChange}
-          />
-          <input
-            className="button-primary"
-            type="submit"
-            value="Login"
-            onClick={doLogin}
-          />
-        </form>
+        <>
+          <h3>User Control Panel</h3>
+          <form>
+            <input
+              placeholder="Username"
+              name="username"
+              type="text"
+              onChange={onChange}
+            />
+            <input
+              placeholder="Password"
+              name="password"
+              type="password"
+              onChange={onChange}
+            />
+            <input
+              style={{ width: "100%" }}
+              className="button-primary"
+              type="submit"
+              value="Sign in"
+              onClick={doLogin}
+            />
+          </form>
+        </>
       )}
     </>
   );
