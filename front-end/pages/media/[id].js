@@ -2,12 +2,18 @@ import React, { useEffect, useState } from "react";
 import Layout from "../../components/layout";
 import sendRequest from "../../utils/sendRequest";
 import { formatSeconds } from "../../utils/formatSeconds";
+import useStore from "../../store/user";
+import Link from "next/link";
+import { useToasts } from "react-toast-notifications";
 
 function SpecificMedia({ postid, post, commentData }) {
+  const isLoggedIn = useStore((state) => state.loginStatus);
   const [didClickComment, setClickComment] = useState(false); // button toggle when user clicks the text area
   const [comment, setComment] = useState(""); // comment textbox
   const [comments, setComments] = useState(commentData); // comment data coming from the API
   const [isUpToDate, upToDate] = useState(true); // to update the section when this is called.
+
+  const { addToast } = useToasts();
 
   // increase views everytime this resets
   useEffect(() => {
@@ -57,44 +63,65 @@ function SpecificMedia({ postid, post, commentData }) {
           <hr style={{ marginTop: "1rem", marginBottom: "1rem" }} />
           <div style={{ fontSize: "1.3rem" }}>
             <form>
-              <textarea
-                style={{ resize: "none" }}
-                placeholder="Add a public comment..."
-                onClick={(e) => {
-                  e.preventDefault();
-                  setClickComment(true);
-                }}
-                onChange={(e) => {
-                  e.preventDefault();
-                  setComment(e.target.value);
-                }}
-              />
-
-              {didClickComment && (
-                <div style={{ textAlign: "right" }}>
-                  <a
-                    className="button button-clear"
-                    onClick={(e) => setClickComment(false)}
-                  >
-                    Cancel
-                  </a>
-                  <a
-                    className="button"
+              {isLoggedIn ? (
+                <>
+                  <textarea
+                    value={comment || ""}
+                    style={{ resize: "none" }}
+                    placeholder="Add a public comment..."
                     onClick={(e) => {
                       e.preventDefault();
-
-                      upToDate(false);
-                      sendRequest("POST", "media/comment", {
-                        body: JSON.stringify({
-                          mediaid: postid,
-                          comment: comment,
-                        }),
-                      });
+                      setClickComment(true);
                     }}
-                  >
-                    Comment
-                  </a>
-                </div>
+                    onChange={(e) => {
+                      e.preventDefault();
+                      setComment(e.target.value);
+                    }}
+                  />
+
+                  {didClickComment && (
+                    <div style={{ textAlign: "right" }}>
+                      <a
+                        className="button button-clear"
+                        onClick={(e) => setClickComment(false)}
+                      >
+                        Cancel
+                      </a>
+                      <a
+                        className="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+
+                          if (comment == "") {
+                            addToast("You can't send an empty comment", {
+                              appearance: "error",
+                            });
+                            return;
+                          }
+
+                          setComment("");
+                          upToDate(false);
+                          sendRequest("POST", "media/comment", {
+                            body: JSON.stringify({
+                              mediaid: postid,
+                              comment: comment,
+                            }),
+                          });
+
+                          addToast("You have posted your comment", {
+                            appearance: "success",
+                          });
+                        }}
+                      >
+                        Comment
+                      </a>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <p>
+                  <Link href="/">Login</Link> to add a comment
+                </p>
               )}
             </form>
             {comments.length ? (

@@ -28,7 +28,7 @@ const Home = ({ posts }) => {
                 <div className="author-date">
                   <div className="row">
                     <div className="column">Posted By: {author}</div>
-                    <div className="column column-offset-40">Date: {date}</div>
+                    <div className="column">Date: {date}</div>
                   </div>
                 </div>
                 <div

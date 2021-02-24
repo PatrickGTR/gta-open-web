@@ -17,7 +17,7 @@ const Post = ({ htmlString, data }) => {
         <div className="author-date">
           <div className="row">
             <div className="column">Posted By: {data.author}</div>
-            <div className="column column-offset-40">Date: {data.date}</div>
+            <div className="column">Date: {data.date}</div>
           </div>
         </div>
         <div dangerouslySetInnerHTML={{ __html: htmlString }} />
