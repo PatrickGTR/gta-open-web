@@ -4,7 +4,8 @@ import sendRequest from "../../utils/sendRequest";
 import { formatSeconds } from "../../utils/formatSeconds";
 import useStore from "../../store/user";
 import Link from "next/link";
-import { useToasts } from "react-toast-notifications";
+
+import { useMessage } from "../utils/message";
 
 function SpecificMedia({ postid, post, commentData }) {
   const isLoggedIn = useStore((state) => state.loginStatus);
@@ -13,7 +14,7 @@ function SpecificMedia({ postid, post, commentData }) {
   const [comments, setComments] = useState(commentData); // comment data coming from the API
   const [isUpToDate, upToDate] = useState(true); // to update the section when this is called.
 
-  const { addToast } = useToasts();
+  const { notifySuccess, notifyError } = useMessage();
 
   // increase views everytime this resets
   useEffect(() => {
@@ -93,9 +94,7 @@ function SpecificMedia({ postid, post, commentData }) {
                           e.preventDefault();
 
                           if (comment == "") {
-                            addToast("You can't send an empty comment", {
-                              appearance: "error",
-                            });
+                            notifyError("You can't send an empty comment");
                             return;
                           }
 
@@ -108,9 +107,7 @@ function SpecificMedia({ postid, post, commentData }) {
                             }),
                           });
 
-                          addToast("You have posted your comment", {
-                            appearance: "success",
-                          });
+                          notifySuccess("You have posted your comment");
                         }}
                       >
                         Comment

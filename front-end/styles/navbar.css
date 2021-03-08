@@ -28,9 +28,12 @@
 	text-decoration: none;
   }
 
+  .highlighted,
   .header li a:hover,
   .header .menu-btn:hover {
-	border-bottom: 2px solid purple;
+	background: grey;
+	color: white;
+
   }
 
   .header .logo {

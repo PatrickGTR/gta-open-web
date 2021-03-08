@@ -1,7 +1,5 @@
 import LoginForm from "../components/loginform";
-import React, { useEffect, useState } from "react";
-
-const UNABLE_FETCH_ERR = "error fetching data";
+import { noAvailableServer } from "../utils/message";
 
 const SideBar = ({ stats }) => {
   const { highestKill, highestDeaths, highestMoney, playerCount } = stats;
@@ -19,7 +17,7 @@ const SideBar = ({ stats }) => {
           </tr>
           <tr>
             <td>Registered Users</td>
-            <td>{playerCount || UNABLE_FETCH_ERR}</td>
+            <td>{playerCount || noAvailableServer}</td>
           </tr>
           <tr>
             <td>Banned Users</td>
@@ -27,15 +25,15 @@ const SideBar = ({ stats }) => {
           </tr>
           <tr>
             <td>Most Kills</td>
-            <td>{highestKill || UNABLE_FETCH_ERR}</td>
+            <td>{highestKill || noAvailableServer}</td>
           </tr>
           <tr>
             <td>Most Deaths</td>
-            <td>{highestDeaths || UNABLE_FETCH_ERR}</td>
+            <td>{highestDeaths || noAvailableServer}</td>
           </tr>
           <tr>
             <td>Most Money</td>
-            <td>{highestMoney || UNABLE_FETCH_ERR}</td>
+            <td>{highestMoney || noAvailableServer}</td>
           </tr>
         </tbody>
       </table>

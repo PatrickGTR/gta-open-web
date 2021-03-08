@@ -1,8 +1,8 @@
 import Link from "next/link";
 import Router from "next/router";
-import { useToasts } from "react-toast-notifications";
 import useStore from "../store/user";
 import sendRequest from "../utils/sendRequest";
+import { useMessage } from "../utils/message";
 
 const GlobalNav = () => {
   return (
@@ -24,7 +24,7 @@ const GlobalNav = () => {
 };
 const LoggedUserNav = () => {
   const setLoginStatus = useStore((state) => state.setLoginStatus);
-  const { addToast } = useToasts();
+  const { notifySuccess } = useMessage();
 
   const doLogout = (e) => {
     e.preventDefault();
@@ -32,7 +32,7 @@ const LoggedUserNav = () => {
     sendRequest("DELETE", "user");
     setLoginStatus(false);
 
-    addToast("You have logged out", { appearance: "info" });
+    notifySuccess("You have logged out");
   };
 
   return (

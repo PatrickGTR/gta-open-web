@@ -52,7 +52,7 @@ function Media({ datas }) {
                     <img
                       className="media-thumbnail"
                       src={
-                        `http://img.youtube.com/vi/` +
+                        `https://img.youtube.com/vi/` +
                         data.youtubeLink.split("=")[1] +
                         `/mqdefault.jpg`
                       }

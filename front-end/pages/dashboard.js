@@ -3,7 +3,6 @@ import useStore from "../store/user";
 import Router from "next/router";
 import Layout from "../components/layout";
 
-import { parseCookie } from "../utils/cookie";
 import sendRequest from "../utils/sendRequest";
 
 const DashBoard = ({ data }) => {

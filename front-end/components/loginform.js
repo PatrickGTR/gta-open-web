@@ -1,18 +1,19 @@
 import Router from "next/router";
 import { useState } from "react";
-import { useToasts } from "react-toast-notifications";
 import useStore from "../store/user";
 import sendRequest from "../utils/sendRequest";
+import { useMessage } from "../utils/message";
 
 const LoginForm = () => {
   const setLogin = useStore((state) => state.setLoginStatus);
   const isLoggedIn = useStore((state) => state.loginStatus);
-  const { addToast } = useToasts();
 
   const [accountDetails, setAccountDetails] = useState({
     username: "",
     password: "",
   });
+
+  const { notifyError, notifySuccess } = useMessage();
 
   const onChange = (e) => {
     e.preventDefault();
@@ -34,20 +35,14 @@ const LoginForm = () => {
       if (response.status === 200) {
         setLogin(true);
 
-        addToast(msg, {
-          appearance: "success",
-        });
+        notifySuccess(msg);
         Router.push(`/dashboard`);
       } else {
-        addToast(msg, {
-          appearance: "error",
-        });
+        notifyError(msg);
         return;
       }
     } catch (e) {
-      addToast("Could not connect to the API, please contact a developer.", {
-        appearance: "error",
-      });
+      notifyError("Could not connect to the API, please contact a developer.");
     }
   };
 

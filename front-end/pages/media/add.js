@@ -1,9 +1,9 @@
 import Link from "next/link";
 import Router from "next/router";
 import React, { useState } from "react";
-import { useToasts } from "react-toast-notifications";
 import Layout from "../../components/layout";
 import sendRequest from "../../utils/sendRequest";
+import { useMessage } from "../../utils//message";
 
 function AddMedia() {
   const [inputData, setInputData] = useState({
@@ -11,18 +11,18 @@ function AddMedia() {
     title: "",
   });
 
-  const { addToast } = useToasts();
+  const { notifyError, notifySuccess } = useMessage();
 
   const onSubmit = async (e) => {
     e.preventDefault();
 
     if (inputData.link === "") {
-      addToast("Youtube link is required!", { appearance: "error" });
+      notifyError("Youtube link is required!");
       return;
     }
 
     if (inputData.title === "") {
-      addToast("Title is required!", { appearance: "error" });
+      notifyError("Title is required!");
       return;
     }
 
@@ -39,20 +39,17 @@ function AddMedia() {
       // Redirect user back to '/media' page.
       // on success
       if (response.status === 200) {
-        addToast(data.msg, { appearance: "success" });
+        notifySuccess(data.msg);
         Router.push("/media");
       } else {
         if (data.code === "internal.error") {
-          addToast(
+          notifyError(
             `${data.msg} Make sure your youtube link is not a playlist`,
-            {
-              appearance: "error",
-            },
           );
           return;
         }
 
-        addToast(data.msg, { appearance: "error" });
+        notifyError(data.msg);
       }
     } catch (e) {
       console.log(e);
