@@ -8,7 +8,7 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
-	"github.com/open-backend/user"
+	"github.com/open-backend/session"
 )
 
 func MediaIncrementViews(w http.ResponseWriter, r *http.Request) {
@@ -63,7 +63,7 @@ func MediaPostComment(w http.ResponseWriter, r *http.Request) {
 	}
 	// get the name based on account id
 	var author string
-	userid, _ := user.GetUIDFromSession(r)
+	userid, _ := session.GetUID(r)
 	result, _ := ExecuteQuery("SELECT username FROM players WHERE u_id = ?", userid)
 	result.Next()
 	result.Scan(&author)
@@ -114,6 +114,66 @@ func MediaGetComments(w http.ResponseWriter, r *http.Request) {
 	result.Close()
 
 	render.JSON(w, r, comments)
+	return
+}
+
+func MediaGet(w http.ResponseWriter, r *http.Request) {
+	webQuery := r.URL.Query().Get("q")
+
+	post := mediaBody{}
+
+	switch webQuery {
+	case "hottest":
+		{
+			result, _ := ExecuteQuery(`
+				SELECT
+					title,
+					link,
+					author,
+					views
+				FROM
+					web_media
+				ORDER BY
+					views
+				DESC LIMIT 1
+			`)
+
+			result.Next()
+			result.Scan(&post.Title, &post.Link, &post.Author, &post.Views)
+			result.Close()
+
+		}
+	case "newest":
+		{
+			result, _ := ExecuteQuery(`
+				SELECT
+					title,
+					link,
+					author,
+					views
+				FROM
+					web_media
+				ORDER BY
+					postid
+				DESC LIMIT 1
+			`)
+
+			result.Next()
+			result.Scan(&post.Title, &post.Link, &post.Author, &post.Views)
+			result.Close()
+
+		}
+	default:
+		render.JSON(w, r, &Exception{
+			Code:    "invalid.query.value",
+			Message: "Acceptable queries are 'hotest', 'newest'",
+		})
+		render.Status(r, http.StatusNotFound)
+		return
+	}
+
+	render.JSON(w, r, post)
+	render.Status(r, http.StatusOK)
 	return
 }
 
@@ -232,7 +292,7 @@ func MediaPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get the name based on account id
-	userid, _ := user.GetUIDFromSession(r)
+	userid, _ := session.GetUID(r)
 	result, _ := ExecuteQuery("SELECT username FROM players WHERE u_id = ?", userid)
 	result.Next()
 	result.Scan(&body.Author)

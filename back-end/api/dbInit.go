@@ -14,11 +14,11 @@ import (
 var mysqlHandle *sql.DB
 
 func init() {
-	// Development purposes only, remove on production.
-	err := godotenv.Load(".env")
-
-	if err != nil {
-		log.Fatal("Error loading .env file")
+	if os.Getenv("ENV") != "PROD" {
+		err := godotenv.Load(".env")
+		if err != nil {
+			log.Fatal("Error loading .env file")
+		}
 	}
 
 	mysqlHandle = initDB()

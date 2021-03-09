@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/open-backend/api"
-	"github.com/open-backend/user"
+	"github.com/open-backend/session"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -25,11 +25,28 @@ import (
 func main() {
 	router := chi.NewRouter()
 
+	// A good base middleware stack
+	router.Use(middleware.RequestID)
+	router.Use(middleware.RealIP)
+	router.Use(middleware.Logger)
+	router.Use(middleware.Recoverer)
+
+	setupCORS(router)
+
+	setupRoutes(router)
+	srv := &http.Server{
+		Addr:    ":8000",
+		Handler: router,
+	}
+	setupServer(srv)
+
+}
+
+func setupCORS(router *chi.Mux) {
 	router.Use(cors.Handler(cors.Options{
 		AllowedOrigins: []string{
-			"http://localhost:3000",                                // localhost, development mainly in // npm run dev
-			"https://gta-open-i9nn4vr9u-patricksubang.vercel.app",  // live demo, preview
-			"https://gta-open-i9nn4vr9u-patricksubang.vercel.app/", // live demo, preview
+			"http://localhost:3000", // localhost, development mainly in // npm run dev
+			"https://gta-open.ga",   // live demo, preview
 		},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
@@ -37,13 +54,9 @@ func main() {
 		AllowCredentials: true,
 		MaxAge:           300,
 	}))
+}
 
-	// A good base middleware stack
-	router.Use(middleware.RequestID)
-	router.Use(middleware.RealIP)
-	router.Use(middleware.Logger)
-	router.Use(middleware.Recoverer)
-
+func setupRoutes(router *chi.Mux) {
 	// nested route
 	router.Route("/user", func(r chi.Router) {
 		r.Post("/", api.VerifyUser)             // Login
@@ -60,6 +73,7 @@ func main() {
 		r.Post("/", isLoggedIn(api.MediaPost))
 		r.Get("/", api.MediaGetAll)
 		r.Get("/{id}", api.MediaGetOne)
+		r.Get("/trending", api.MediaGet)
 		r.Post("/add_views", api.MediaIncrementViews)
 
 		// comment API
@@ -67,20 +81,17 @@ func main() {
 		r.Get("/comment/{mediaid}", api.MediaGetComments)
 
 	})
+}
 
-	srv := &http.Server{
-		Addr:    ":8000",
-		Handler: router,
-	}
-
+func setupServer(server *http.Server) {
 	// Graceful server shutdown
 	go func() {
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Failed to initialize server: %v\n", err)
 		}
 	}()
 
-	fmt.Println("Web server is running on port", srv.Addr)
+	fmt.Println("Web server is running on port", server.Addr)
 
 	// Wait for kill signal of channel
 	quit := make(chan os.Signal)
@@ -97,7 +108,7 @@ func main() {
 
 	// Shutdown server
 	fmt.Println("Shutting down server...")
-	if err := srv.Shutdown(ctx); err != nil {
+	if err := server.Shutdown(ctx); err != nil {
 		log.Fatalf("Server forced to shutdown: %v\n", err)
 	}
 }
@@ -106,9 +117,10 @@ func isLoggedIn(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// grab the content of the session.
 		// if there are none set, return unauthorized http status
-		_, err := user.GetUIDFromSession(r)
+		_, err := session.GetUID(r)
 		if err != nil {
 			render.Status(r, http.StatusUnauthorized)
+			return
 		}
 
 		// proceed to the next route

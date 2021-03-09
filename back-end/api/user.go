@@ -8,7 +8,8 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
-	"github.com/open-backend/user"
+
+	"github.com/open-backend/session"
 	"github.com/open-backend/util"
 )
 
@@ -69,7 +70,7 @@ func VerifyUser(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err.Error())
 	}
 
-	err = user.GenerateSession(w, r, uid)
+	err = session.Generate(w, r, uid)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
@@ -84,13 +85,13 @@ func VerifyUser(w http.ResponseWriter, r *http.Request) {
 
 // Logout (/user - DELETE)
 func Logout(w http.ResponseWriter, r *http.Request) {
-	user.DestroySession(w, r)
+	session.Destroy(w, r)
 	render.Status(r, http.StatusOK)
 	return
 }
 
 func GetSelfData(w http.ResponseWriter, r *http.Request) {
-	userid, _ := user.GetUIDFromSession(r)
+	userid, _ := session.GetUID(r)
 	data, err := getAllData(userid)
 	if err != nil {
 		render.Status(r, http.StatusBadRequest)
