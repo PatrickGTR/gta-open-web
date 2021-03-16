@@ -1,6 +1,7 @@
-package api
+package media
 
 import (
+	"database/sql"
 	"encoding/json"
 	"net/http"
 	"strconv"
@@ -11,7 +12,34 @@ import (
 	"github.com/open-backend/session"
 )
 
-func MediaIncrementViews(w http.ResponseWriter, r *http.Request) {
+type MediaService struct {
+	Routes chi.Router
+	db     *sql.DB
+}
+
+func New(db *sql.DB) *MediaService {
+	router := chi.NewRouter()
+
+	service := &MediaService{
+		Routes: router,
+		db:     db,
+	}
+
+	router.Post("/", session.WithAuthentication(service.addMedia))
+	router.Get("/", service.getAll)
+	router.Get("/{id}", service.getOne)
+	router.Get("/trending", service.getTrending)
+	router.Post("/add_views", service.incrementViews)
+
+	router.Route("/comment", func(r chi.Router) {
+		r.Post("/", session.WithAuthentication(service.postComment))
+		r.Get("/{mediaid}", service.getComments)
+	})
+
+	return service
+}
+
+func (s *MediaService) incrementViews(w http.ResponseWriter, r *http.Request) {
 	bodyResponse := struct {
 		MediaID string `json:"mediaid"`
 	}{}
@@ -38,11 +66,11 @@ func MediaIncrementViews(w http.ResponseWriter, r *http.Request) {
 		WHERE
 			postid = ?
 	`
-	ExecuteQuery(query, bodyResponse.MediaID)
+	s.db.Query(query, bodyResponse.MediaID)
 	return
 }
 
-func MediaPostComment(w http.ResponseWriter, r *http.Request) {
+func (s *MediaService) postComment(w http.ResponseWriter, r *http.Request) {
 	bodyResponse := struct {
 		MediaID string `json:"mediaid"`
 		Comment string `json:"comment"`
@@ -64,7 +92,7 @@ func MediaPostComment(w http.ResponseWriter, r *http.Request) {
 	// get the name based on account id
 	var author string
 	userid, _ := session.GetUID(r)
-	result, _ := ExecuteQuery("SELECT username FROM players WHERE u_id = ?", userid)
+	result, _ := s.db.Query("SELECT username FROM players WHERE u_id = ?", userid)
 	result.Next()
 	result.Scan(&author)
 	result.Close()
@@ -76,11 +104,11 @@ func MediaPostComment(w http.ResponseWriter, r *http.Request) {
 		VALUES
 			(?, ?, ?)
 	`
-	_, err = ExecuteQuery(query, bodyResponse.MediaID, author, bodyResponse.Comment)
+	_, err = s.db.Query(query, bodyResponse.MediaID, author, bodyResponse.Comment)
 	return
 }
 
-func MediaGetComments(w http.ResponseWriter, r *http.Request) {
+func (s *MediaService) getComments(w http.ResponseWriter, r *http.Request) {
 	param := chi.URLParam(r, "mediaid")
 	id, _ := strconv.Atoi(param)
 
@@ -97,7 +125,7 @@ func MediaGetComments(w http.ResponseWriter, r *http.Request) {
 			postid
 		DESC
 	`
-	result, err := ExecuteQuery(query, id)
+	result, err := s.db.Query(query, id)
 
 	if err != nil {
 		render.Status(r, http.StatusBadRequest)
@@ -117,7 +145,7 @@ func MediaGetComments(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func MediaGet(w http.ResponseWriter, r *http.Request) {
+func (s *MediaService) getTrending(w http.ResponseWriter, r *http.Request) {
 	webQuery := r.URL.Query().Get("q")
 
 	post := mediaBody{}
@@ -125,7 +153,7 @@ func MediaGet(w http.ResponseWriter, r *http.Request) {
 	switch webQuery {
 	case "hottest":
 		{
-			result, _ := ExecuteQuery(`
+			result, _ := s.db.Query(`
 				SELECT
 					title,
 					link,
@@ -145,7 +173,7 @@ func MediaGet(w http.ResponseWriter, r *http.Request) {
 		}
 	case "newest":
 		{
-			result, _ := ExecuteQuery(`
+			result, _ := s.db.Query(`
 				SELECT
 					title,
 					link,
@@ -177,7 +205,7 @@ func MediaGet(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func MediaGetOne(w http.ResponseWriter, r *http.Request) {
+func (s *MediaService) getOne(w http.ResponseWriter, r *http.Request) {
 	param := chi.URLParam(r, "id")
 	id, _ := strconv.Atoi(param)
 
@@ -193,7 +221,7 @@ func MediaGetOne(w http.ResponseWriter, r *http.Request) {
 		WHERE
 			postid = ?`
 
-	result, err := ExecuteQuery(query, id)
+	result, err := s.db.Query(query, id)
 	if err != nil {
 		render.Status(r, http.StatusInternalServerError)
 		return
@@ -210,7 +238,7 @@ func MediaGetOne(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func MediaGetAll(w http.ResponseWriter, r *http.Request) {
+func (s *MediaService) getAll(w http.ResponseWriter, r *http.Request) {
 	query := `
 		SELECT
 			postid,
@@ -225,7 +253,7 @@ func MediaGetAll(w http.ResponseWriter, r *http.Request) {
 			postid
 		DESC
 	`
-	result, err := ExecuteQuery(query)
+	result, err := s.db.Query(query)
 	if err != nil {
 		render.Status(r, http.StatusInternalServerError)
 		render.JSON(w, r, &Exception{
@@ -254,7 +282,7 @@ func MediaGetAll(w http.ResponseWriter, r *http.Request) {
 // 400 - invalid json passed
 // 406 - invalid link
 // 500 - most likely mysql error.
-func MediaPost(w http.ResponseWriter, r *http.Request) {
+func (s *MediaService) addMedia(w http.ResponseWriter, r *http.Request) {
 	var err error
 	body := mediaBody{}
 
@@ -293,12 +321,12 @@ func MediaPost(w http.ResponseWriter, r *http.Request) {
 
 	// get the name based on account id
 	userid, _ := session.GetUID(r)
-	result, _ := ExecuteQuery("SELECT username FROM players WHERE u_id = ?", userid)
+	result, _ := s.db.Query("SELECT username FROM players WHERE u_id = ?", userid)
 	result.Next()
 	result.Scan(&body.Author)
 	result.Close()
 
-	err = insertMediaToDB(body.Link, body.Title, body.Author)
+	err = s.insertMediaToDB(body.Link, body.Title, body.Author)
 	if err != nil {
 		render.Status(r, http.StatusInternalServerError)
 		render.JSON(w, r, &Exception{

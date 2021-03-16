@@ -1,8 +1,8 @@
-package api
+package player
 
 import "fmt"
 
-func getUserID(username string) (uid int, err error) {
+func (s *PlayerService) getUserID(username string) (uid int, err error) {
 
 	query := `
 		SELECT
@@ -13,7 +13,7 @@ func getUserID(username string) (uid int, err error) {
 			username = ?
 	`
 
-	result, err := ExecuteQuery(query, username)
+	result, err := s.db.Query(query, username)
 	if err != nil {
 		return
 	}
@@ -24,7 +24,7 @@ func getUserID(username string) (uid int, err error) {
 	return
 }
 
-func getPasswordFromDB(username string) (password string) {
+func (s *PlayerService) getPasswordFromDB(username string) (password string) {
 	query := `
 		SELECT
 			password
@@ -34,7 +34,7 @@ func getPasswordFromDB(username string) (password string) {
 			username = ?
 	`
 
-	result, err := ExecuteQuery(query, username)
+	result, err := s.db.Query(query, username)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
@@ -46,7 +46,7 @@ func getPasswordFromDB(username string) (password string) {
 	return
 }
 
-func getAllData(uid int) (data Player, err error) {
+func (s *PlayerService) getAllData(uid int) (data Player, err error) {
 	query := `
 	SELECT
 		p.u_id,
@@ -81,7 +81,7 @@ func getAllData(uid int) (data Player, err error) {
 		p.u_id = ?
 	`
 
-	result, err := ExecuteQuery(query, uid)
+	result, err := s.db.Query(query, uid)
 	if err != nil {
 		return
 	}

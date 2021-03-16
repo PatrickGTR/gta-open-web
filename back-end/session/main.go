@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/go-chi/render"
 	"github.com/gorilla/sessions"
 	"github.com/joho/godotenv"
 )
@@ -74,4 +75,19 @@ func Destroy(w http.ResponseWriter, r *http.Request) {
 	session.Options.MaxAge = -1
 	session.Save(r, w)
 
+}
+
+func WithAuthentication(next http.HandlerFunc) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// grab the content of the session.
+		// if there are none set, return unauthorized http status
+		_, err := GetUID(r)
+		if err != nil {
+			render.Status(r, http.StatusUnauthorized)
+			return
+		}
+
+		// proceed to the next route
+		next(w, r)
+	})
 }

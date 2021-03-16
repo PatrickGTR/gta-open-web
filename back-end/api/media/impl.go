@@ -1,4 +1,6 @@
-package api
+package media
+
+import "github.com/open-backend/util"
 
 type mediaBody struct {
 	Postid int    `json:"id"`
@@ -15,8 +17,10 @@ type mediaComments struct {
 	Date    string `json:"datePosted"`
 }
 
-func insertMediaToDB(link string, title string, author string) (err error) {
+type Exception util.MessageData
+
+func (s *MediaService) insertMediaToDB(link string, title string, author string) (err error) {
 	query := `INSERT INTO web_media (link, title, author) VALUES (?, ?, ?)`
-	_, err = ExecuteQuery(query, link, title, author)
+	_, err = s.db.Query(query, link, title, author)
 	return
 }

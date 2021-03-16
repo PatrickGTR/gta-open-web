@@ -1,6 +1,7 @@
-package api
+package player
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -13,13 +14,32 @@ import (
 	"github.com/open-backend/util"
 )
 
+type PlayerService struct {
+	Routes chi.Router
+	db     *sql.DB
+}
+
+func New(db *sql.DB) *PlayerService {
+	router := chi.NewRouter()
+
+	service := &PlayerService{
+		Routes: router,
+		db:     db,
+	}
+
+	router.Post("/", service.verifyUser)                                     // Login
+	router.Delete("/", session.WithAuthentication(service.logout))           // Logout
+	router.Get("/", session.WithAuthentication(service.getDataBySessionUID)) // Dashboard
+	return service
+}
+
 // VerifyUser (/user - POST)
 // HTTP RESPONSES
 // 200 -- Success, username and password is good.
 // 400 -- Bad Request, json is invalid or username, password is empty.
 // 401 -- Unauthorized, username is valid but user input password does not match
 // ... the password in the database.
-func VerifyUser(w http.ResponseWriter, r *http.Request) {
+func (s *PlayerService) verifyUser(w http.ResponseWriter, r *http.Request) {
 	bodyResponse := struct {
 		Username string `json:"username"`
 		Password string `json:"password"`
@@ -50,7 +70,7 @@ func VerifyUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dbPassword := getPasswordFromDB(username)
+	dbPassword := s.getPasswordFromDB(username)
 	match := util.ComparePassword(dbPassword, password)
 	if password == "" || !match {
 		render.Status(r, http.StatusUnauthorized)
@@ -65,7 +85,7 @@ func VerifyUser(w http.ResponseWriter, r *http.Request) {
 	// the client does not need to see why as it's mostly internal error.
 	// but can be good for devs to catch wrong queries etc..
 	// revise this code, it probably does need any error handling tbh.
-	uid, err := getUserID(username)
+	uid, err := s.getUserID(username)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
@@ -84,20 +104,19 @@ func VerifyUser(w http.ResponseWriter, r *http.Request) {
 }
 
 // Logout (/user - DELETE)
-func Logout(w http.ResponseWriter, r *http.Request) {
+func (s *PlayerService) logout(w http.ResponseWriter, r *http.Request) {
 	session.Destroy(w, r)
 	render.Status(r, http.StatusOK)
 	return
 }
 
-func GetSelfData(w http.ResponseWriter, r *http.Request) {
+func (s *PlayerService) getDataBySessionUID(w http.ResponseWriter, r *http.Request) {
 	userid, _ := session.GetUID(r)
-	data, err := getAllData(userid)
+	data, err := s.getAllData(userid)
 	if err != nil {
 		render.Status(r, http.StatusBadRequest)
 		return
 	}
-
 	render.JSON(w, r, &Player{Account: data.Account,
 		Stats: data.Stats,
 		Items: data.Items})
@@ -107,10 +126,10 @@ func GetSelfData(w http.ResponseWriter, r *http.Request) {
 
 // GetDataByUID (/user/userid - GET)
 // grabs all the user data that will be shown in dashboard.
-func GetDataByUID(w http.ResponseWriter, r *http.Request) {
+func (s *PlayerService) getDataByUID(w http.ResponseWriter, r *http.Request) {
 	param := chi.URLParam(r, "userid")
 	userid, _ := strconv.Atoi(param)
-	data, err := getAllData(userid)
+	data, err := s.getAllData(userid)
 	if err != nil {
 		render.Status(r, http.StatusBadRequest)
 		return

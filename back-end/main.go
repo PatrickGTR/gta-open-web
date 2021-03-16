@@ -1,129 +1,117 @@
 package main
 
-// TODO
-// Review code & refactor
-
 import (
 	"context"
+
 	"fmt"
 	"log"
 	"net/http"
 	"os"
-	"os/signal"
-	"syscall"
-	"time"
 
-	"github.com/open-backend/api"
-	"github.com/open-backend/session"
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/open-backend/api/media"
+	"github.com/open-backend/api/player"
+	"github.com/open-backend/api/server"
+	"github.com/open-backend/database"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/cors"
-	"github.com/go-chi/render"
+	"github.com/joho/godotenv"
+	"go.uber.org/fx"
 )
 
 func main() {
+	if os.Getenv("ENV") != "PROD" {
+		err := godotenv.Load(".env")
+		if err != nil {
+			log.Fatal("Error loading .env file")
+		}
+		fmt.Println(".env file loaded")
+	}
+
+	fx.New(
+		fx.Options(
+			fx.Provide(
+				initApp,      // start http server, cors settings, and logging.
+				database.New, // Initialise database connection & create /ping route
+				player.New,   // Initialise endpoints for players
+				media.New,    // Initialise endpoints for media
+				server.New,
+			),
+			fx.Invoke(
+				func(
+					router chi.Router,
+					db *database.DBService,
+					ply *player.PlayerService,
+					media *media.MediaService,
+					srv *server.ServerService) {
+
+					// conection check
+					router.Mount("/ping", db.Routes)
+
+					// /user/ -> POST (login)
+					// /user/ -> DELETE (logout)
+					// /user/ -> GET (get data from session uid)
+					router.Mount("/user", ply.Routes)
+
+					// server statistics displayed in
+					// homepage of the website
+					router.Mount("/server", srv.Routes)
+
+					// /media/ -> POST (add new media )
+					// /media/ -> GET (get all media)
+					// /media/{id} -> GET (get media by specified id)
+					// /media/trending -> GET (retrieves newest and most viewed media)
+					// /media/add_views -> POST (increments view each page refresh)
+
+					// media -> comment
+					// /comment/ -> POST (creates a new comment entry)
+					// /comment/{mediaid} -> GET (retrieves all comments of given media id)
+					router.Mount("/media", media.Routes)
+				}),
+		),
+	).Run()
+}
+
+func initApp(lc fx.Lifecycle) (chi.Router, error) {
+
 	router := chi.NewRouter()
 
-	// A good base middleware stack
-	router.Use(middleware.RequestID)
-	router.Use(middleware.RealIP)
-	router.Use(middleware.Logger)
-	router.Use(middleware.Recoverer)
+	router.Use(
+		middleware.RequestID,
+		middleware.RealIP,
+		middleware.Logger,
+		middleware.Recoverer,
+		cors.Handler(cors.Options{
+			AllowedOrigins: []string{
+				"http://localhost:3000", // localhost, development mainly in // npm run dev
+				"https://gta-open.ga",   // live demo, preview
+			},
+			AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+			AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+			ExposedHeaders:   []string{"Link"},
+			AllowCredentials: true,
+			MaxAge:           300,
+		}))
 
-	setupCORS(router)
-
-	setupRoutes(router)
-	srv := &http.Server{
+	server := &http.Server{
 		Addr:    ":8000",
 		Handler: router,
 	}
-	setupServer(srv)
 
-}
-
-func setupCORS(router *chi.Mux) {
-	router.Use(cors.Handler(cors.Options{
-		AllowedOrigins: []string{
-			"http://localhost:3000", // localhost, development mainly in // npm run dev
-			"https://gta-open.ga",   // live demo, preview
+	lc.Append(fx.Hook{
+		OnStart: func(ctx context.Context) error {
+			go server.ListenAndServe()
+			fmt.Println("Web server is running on port", server.Addr)
+			return nil
 		},
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
-		ExposedHeaders:   []string{"Link"},
-		AllowCredentials: true,
-		MaxAge:           300,
-	}))
-}
+		OnStop: func(ctx context.Context) error {
+			server.Shutdown(ctx)
 
-func setupRoutes(router *chi.Mux) {
-	// nested route
-	router.Route("/user", func(r chi.Router) {
-		r.Post("/", api.VerifyUser)             // Login
-		r.Delete("/", isLoggedIn(api.Logout))   // Logout
-		r.Get("/", isLoggedIn(api.GetSelfData)) // Dashboard
+			return nil
+		},
 	})
 
-	router.Route("/server", func(r chi.Router) {
-		r.Get("/stats", api.ServerStats)
-		r.Get("/banlist", api.BanList)
-	})
-
-	router.Route("/media", func(r chi.Router) {
-		r.Post("/", isLoggedIn(api.MediaPost))
-		r.Get("/", api.MediaGetAll)
-		r.Get("/{id}", api.MediaGetOne)
-		r.Get("/trending", api.MediaGet)
-		r.Post("/add_views", api.MediaIncrementViews)
-
-		// comment API
-		r.Post("/comment", isLoggedIn(api.MediaPostComment))
-		r.Get("/comment/{mediaid}", api.MediaGetComments)
-
-	})
-}
-
-func setupServer(server *http.Server) {
-	// Graceful server shutdown
-	go func() {
-		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("Failed to initialize server: %v\n", err)
-		}
-	}()
-
-	fmt.Println("Web server is running on port", server.Addr)
-
-	// Wait for kill signal of channel
-	quit := make(chan os.Signal)
-
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-
-	// This blocks until a signal is passed into the quit channel
-	<-quit
-
-	// The context is used to inform the server it has 5 seconds to finish
-	// the request it is currently handling
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	// Shutdown server
-	fmt.Println("Shutting down server...")
-	if err := server.Shutdown(ctx); err != nil {
-		log.Fatalf("Server forced to shutdown: %v\n", err)
-	}
-}
-
-func isLoggedIn(next http.HandlerFunc) http.HandlerFunc {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// grab the content of the session.
-		// if there are none set, return unauthorized http status
-		_, err := session.GetUID(r)
-		if err != nil {
-			render.Status(r, http.StatusUnauthorized)
-			return
-		}
-
-		// proceed to the next route
-		next(w, r)
-	})
+	return router, nil
 }
