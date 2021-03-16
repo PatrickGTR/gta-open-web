@@ -5,7 +5,7 @@ import { formatSeconds } from "../../utils/formatSeconds";
 import useStore from "../../store/user";
 import Link from "next/link";
 
-import { useMessage } from "../utils/message";
+import { useMessage } from "../../utils/message";
 
 function SpecificMedia({ postid, post, commentData }) {
   const isLoggedIn = useStore((state) => state.loginStatus);

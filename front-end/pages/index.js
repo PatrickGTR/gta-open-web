@@ -168,46 +168,6 @@ export const getStaticProps = async () => {
   } catch (err) {
     console.log(`promise.all ${err}`);
   }
-  // try {
-  //   let response, data;
-  //   // fetch highest kills
-  //   response = await sendRequest("GET", "server/stats?type=1&option=1");
-  //   data = await response.json();
-  //   serverStats = { ...serverStats, highestKill: data.value };
-
-  //   // fetch highest money
-  //   response = await sendRequest("GET", "server/stats?type=1&option=2");
-  //   data = await response.json();
-  //   serverStats = { ...serverStats, highestMoney: data.value };
-
-  //   // fetch highest deaths
-  //   response = await sendRequest("GET", "server/stats?type=1&option=3");
-  //   data = await response.json();
-  //   serverStats = {
-  //     ...serverStats,
-  //     highestDeaths: data.value,
-  //   };
-
-  //   //fetch total accounts
-  //   response = await sendRequest("GET", "server/stats?type=2");
-  //   data = await response.json();
-  //   serverStats = { ...serverStats, playerCount: data.value };
-
-  //   // Media
-  //   response = await sendRequest("GET", "media/trending?q=newest");
-  //   data = await response.json();
-  //   trendingMedia = { newest: data };
-
-  //   response = await sendRequest("GET", "media/trending?q=hottest");
-  //   data = await response.json();
-  //   trendingMedia = { ...trendingMedia, hottest: data };
-  // } catch (e) {
-  //   // write a proper logging
-  //   console.log(
-  //     "an error was caught trying to fetch server data, please check logs",
-  //     e,
-  //   );
-  // }
 
   return {
     props: {
