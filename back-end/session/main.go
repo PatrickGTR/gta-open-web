@@ -2,25 +2,16 @@ package session
 
 import (
 	"errors"
-	"log"
 	"net/http"
 	"os"
 
 	"github.com/go-chi/render"
 	"github.com/gorilla/sessions"
-	"github.com/joho/godotenv"
 )
 
 var Session *sessions.CookieStore
 
-func init() {
-
-	if os.Getenv("ENV") != "PROD" {
-		err := godotenv.Load(".env")
-		if err != nil {
-			log.Fatal("Error loading .env file")
-		}
-	}
+func New() *sessions.CookieStore {
 
 	Session = sessions.NewCookieStore([]byte(os.Getenv("SECRET_KEY")))
 	Session.Options.Path = "/"
@@ -34,6 +25,7 @@ func init() {
 	}
 	Session.Options.Secure = state
 
+	return Session
 }
 
 // GetUID retrieves the account unique id based on the session token.

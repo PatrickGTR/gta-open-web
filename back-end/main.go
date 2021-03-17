@@ -13,6 +13,7 @@ import (
 	"github.com/open-backend/api/player"
 	"github.com/open-backend/api/server"
 	"github.com/open-backend/database"
+	"github.com/open-backend/session"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -40,6 +41,7 @@ func main() {
 				server.New,
 			),
 			fx.Invoke(
+				session.New,
 				func(
 					router chi.Router,
 					db *database.DBService,

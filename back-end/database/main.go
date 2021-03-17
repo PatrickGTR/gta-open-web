@@ -32,12 +32,12 @@ func New() (*DBService, *sql.DB) {
 		err := db.Ping()
 		if err != nil {
 			render.Status(r, http.StatusInternalServerError)
-			render.JSON(w, r, "{status: no connection found}")
+			render.JSON(w, r, map[string]string{"status": "conection failed"})
 			return
 		}
 
 		render.Status(r, http.StatusOK)
-		render.JSON(w, r, "{status: connection alive}")
+		render.JSON(w, r, map[string]string{"status": "conection alive"})
 		return
 	})
 
