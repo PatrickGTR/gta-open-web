@@ -21,12 +21,15 @@ func New() (*DBService, *sql.DB) {
 	if err != nil {
 		fmt.Println("An error connecting to MySQL server", err)
 	}
+
 	router := chi.NewRouter()
 
 	service := &DBService{
 		Routes: router,
 		db:     db,
 	}
+
+	service.setupTable()
 
 	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		err := db.Ping()

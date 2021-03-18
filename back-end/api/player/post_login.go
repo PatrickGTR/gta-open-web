@@ -1,37 +1,14 @@
 package player
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
 
-	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
-
 	"github.com/open-backend/session"
 	"github.com/open-backend/util"
 )
-
-type PlayerService struct {
-	Routes chi.Router
-	db     *sql.DB
-}
-
-func New(db *sql.DB) *PlayerService {
-	router := chi.NewRouter()
-
-	service := &PlayerService{
-		Routes: router,
-		db:     db,
-	}
-
-	router.Post("/", service.verifyUser)                                     // Login
-	router.Delete("/", session.WithAuthentication(service.logout))           // Logout
-	router.Get("/", session.WithAuthentication(service.getDataBySessionUID)) // Dashboard
-	return service
-}
 
 // VerifyUser (/user - POST)
 // HTTP RESPONSES
@@ -100,44 +77,5 @@ func (s *PlayerService) verifyUser(w http.ResponseWriter, r *http.Request) {
 		Code:    "login.success",
 		Message: "You have successfully logged in",
 	})
-	return
-}
-
-// Logout (/user - DELETE)
-func (s *PlayerService) logout(w http.ResponseWriter, r *http.Request) {
-	session.Destroy(w, r)
-	render.Status(r, http.StatusOK)
-	return
-}
-
-func (s *PlayerService) getDataBySessionUID(w http.ResponseWriter, r *http.Request) {
-	userid, _ := session.GetUID(r)
-	data, err := s.getAllData(userid)
-	if err != nil {
-		render.Status(r, http.StatusBadRequest)
-		return
-	}
-	render.JSON(w, r, &Player{Account: data.Account,
-		Stats: data.Stats,
-		Items: data.Items})
-	render.Status(r, http.StatusOK)
-	return
-}
-
-// GetDataByUID (/user/userid - GET)
-// grabs all the user data that will be shown in dashboard.
-func (s *PlayerService) getDataByUID(w http.ResponseWriter, r *http.Request) {
-	param := chi.URLParam(r, "userid")
-	userid, _ := strconv.Atoi(param)
-	data, err := s.getAllData(userid)
-	if err != nil {
-		render.Status(r, http.StatusBadRequest)
-		return
-	}
-
-	render.JSON(w, r, &Player{Account: data.Account,
-		Stats: data.Stats,
-		Items: data.Items})
-	render.Status(r, http.StatusOK)
 	return
 }
