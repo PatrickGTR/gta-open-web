@@ -2,6 +2,7 @@ package media
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -42,16 +43,19 @@ func (s *MediaService) addMedia(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	titleLimit := 32
 	titleLength := len(body.Title)
-	if titleLength > 50 {
+	if titleLength > titleLimit {
 		render.Status(r, http.StatusNotAcceptable)
 		render.JSON(w, r, &Exception{
 			Code:    "title.too.long",
-			Message: "The maximum characters of title is 50",
+			Message: fmt.Sprint("The maximum characters of title is", titleLimit),
 		})
 	}
 
 	// get the name based on account id
+	// TODO: userid instead of username, then use inner-join to retrieve
+	// username to display on webpage, the code below is the temporary solution.
 	userid, _ := session.GetUID(r)
 	result, _ := s.db.Query("SELECT username FROM players WHERE u_id = ?", userid)
 	result.Next()
