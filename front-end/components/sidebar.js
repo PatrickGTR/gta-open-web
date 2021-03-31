@@ -1,68 +1,12 @@
-import Router from "next/router";
-import { useState } from "react";
+import LoginForm from "../components/loginform";
+import { noAvailableServer } from "../utils/message";
 
-const SideBar = () => {
-  const [accountDetails, setAccountDetails] = useState({
-    username: "",
-    password: "",
-  });
-
-  const [errorMessage, setErrorMesssage] = useState(null);
-
-  const doLogin = async (e) => {
-    e.preventDefault();
-
-    let formData = new FormData();
-    formData.append("username", accountDetails.username);
-    formData.append("password", accountDetails.password);
-
-    const response = await fetch("http://localhost:8000/user/", {
-      method: "POST",
-      body: formData,
-    });
-
-    if (response.status === 200) {
-      Router.push(`/dashboard`);
-
-      const { token } = await response.json();
-
-      localStorage.setItem("jwt-token", token);
-      return;
-    }
-  };
-
-  const onChange = (e) => {
-    e.preventDefault();
-    setAccountDetails({ ...accountDetails, [e.target.name]: e.target.value });
-  };
+const SideBar = ({ stats }) => {
+  const { highestKill, highestDeaths, highestMoney, playerCount } = stats;
 
   return (
     <div>
-      <form>
-        <label>Username</label>
-        <input
-          name="username"
-          type="text"
-          placeholder="Username"
-          onChange={onChange}
-        />
-
-        <label>Password</label>
-        <h6 className="error-msg">{errorMessage !== null && errorMessage}</h6>
-        <input
-          name="password"
-          type="password"
-          placeholder="Passowrd"
-          onChange={onChange}
-        />
-
-        <input
-          className="button-primary"
-          type="submit"
-          value="Login"
-          onClick={doLogin}
-        />
-      </form>
+      <LoginForm />
 
       <h3>Server Statistics</h3>
       <table className="table-statistics">
@@ -73,7 +17,7 @@ const SideBar = () => {
           </tr>
           <tr>
             <td>Registered Users</td>
-            <td>123,000</td>
+            <td>{playerCount || noAvailableServer}</td>
           </tr>
           <tr>
             <td>Banned Users</td>
@@ -81,15 +25,15 @@ const SideBar = () => {
           </tr>
           <tr>
             <td>Most Kills</td>
-            <td>IAlwaysKill</td>
+            <td>{highestKill || noAvailableServer}</td>
           </tr>
           <tr>
             <td>Most Deaths</td>
-            <td>IAlwaysDie</td>
+            <td>{highestDeaths || noAvailableServer}</td>
           </tr>
           <tr>
             <td>Most Money</td>
-            <td>IAmMadeOfMoney</td>
+            <td>{highestMoney || noAvailableServer}</td>
           </tr>
         </tbody>
       </table>

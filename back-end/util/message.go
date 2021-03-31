@@ -1,4 +1,4 @@
-package helper
+package util
 
 type MessageData struct {
 	Code    string `json:"code"`

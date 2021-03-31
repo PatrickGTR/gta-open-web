@@ -1,4 +1,6 @@
-package user
+package player
+
+import "github.com/open-backend/util"
 
 //PlayerCore data
 type PlayerCore struct {
@@ -36,3 +38,6 @@ type Player struct {
 	Stats   PlayerStats `json:"stats"`
 	Items   PlayerItems `json:"items"`
 }
+
+// Exception alias for MessageData.
+type Exception util.MessageData

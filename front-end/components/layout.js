@@ -4,7 +4,7 @@ import Header from "../components/header";
 const Layout = ({ title, children }) => {
   return (
     <>
-      <Header title={title} />
+      <Header title={`GTA Open | ` + title} />
       <Navbar />
       <div className="container">{children}</div>
       <footer className="footer">

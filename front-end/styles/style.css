@@ -1,10 +1,15 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
 body,
 html,
 #__next {
-  margin: 0;
-  padding: 0;
   height: 100%;
 }
+
 
 .container {
   min-height: 100%;
@@ -15,15 +20,14 @@ html,
 }
 
 .home-content p {
-  display: grid;
   font-size: 14px;
 }
 
-.home-content .author-date {
+.author-date {
   border-left: 4px solid grey;
   padding: 0 1rem;
   margin-bottom: 10px;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .container {
@@ -46,4 +50,52 @@ html,
   font-weight: bold;
   font-size: 12px;
   margin-bottom: 5px;
+}
+
+.media {
+  display: inline-block;
+  padding: 0;
+  margin: 3rem 1rem 0 0;
+  width: 240px;
+  height: 227px;
+}
+
+.media:hover  {
+  cursor: pointer;
+}
+
+.media-thumbnail {
+  box-shadow: .5rem .5rem 1rem grey;
+}
+
+.media-caption {
+  text-align: left;
+  margin-bottom: 1rem;
+  width: inherit;
+}
+
+.button {
+  margin-right: 1rem;
+}
+
+.iframe-container {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  padding-top: 56.25%;
+}
+
+.iframe-responsive {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  width: 100%;
+  height: 100%;
+}
+
+
+li {
+  margin: 0;
 }
