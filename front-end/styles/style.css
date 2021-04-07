@@ -99,3 +99,14 @@ html,
 li {
   margin: 0;
 }
+
+
+@media only screen and (min-width: 483px) {
+  .row .column.column-67 {
+    max-width: 100%;
+  }
+  .container {
+    text-align: center;
+  }
+}
+

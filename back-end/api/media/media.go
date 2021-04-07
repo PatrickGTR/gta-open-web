@@ -25,6 +25,7 @@ func New(db *sql.DB) *MediaService {
 	router.Get("/{id}", service.getOne)
 	router.Get("/trending", service.getTrending)
 	router.Post("/add_views", service.incrementViews)
+	router.Delete("/", session.WithAuthentication(service.deleteMedia))
 
 	router.Route("/comment", func(r chi.Router) {
 		r.Post("/", session.WithAuthentication(service.postComment))

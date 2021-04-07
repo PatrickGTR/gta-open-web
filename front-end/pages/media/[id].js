@@ -6,6 +6,7 @@ import useStore from "../../store/user";
 import Link from "next/link";
 
 import { useMessage } from "../../utils/message";
+import Router from "next/router";
 
 function SpecificMedia({ postid, post, commentData }) {
   const isLoggedIn = useStore((state) => state.loginStatus);
@@ -33,6 +34,26 @@ function SpecificMedia({ postid, post, commentData }) {
 
   return (
     <Layout title={post.title}>
+      <button
+        onClick={async (e) => {
+          e.preventDefault();
+
+          const response = await sendRequest("DELETE", "media", {
+            body: JSON.stringify({ id: parseInt(postid), author: post.author }),
+          });
+          const data = await response.json();
+
+          if (response.status !== 200) {
+            notifyError(data.msg);
+            return;
+          } else {
+            notifySuccess(`successfully deleted your post, postid: ${postid}`);
+            Router.push("/media");
+          }
+        }}
+      >
+        Delete Post
+      </button>
       <div className="row">
         <div className="column column-67">
           <div className="iframe-container">
