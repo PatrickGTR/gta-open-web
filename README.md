@@ -13,8 +13,8 @@ Website / Control Panel made for [GTA Open](https://github.com/PatrickGTR/gta-op
 **POST** - /user/ `User authentication (Login)` recieves a json data
 ```json
 {
-    username: "username",
-    password: "password"
+    "username": "username",
+    "password": "password"
 }
 ```
 
@@ -32,23 +32,23 @@ Website / Control Panel made for [GTA Open](https://github.com/PatrickGTR/gta-op
 **POST** - /media/ `Creates a new media entry`
 ```json
 {
-    youtubeLink: "Link",
-    title: "Title"
+    "youtubeLink": "Link",
+    "title": "Title"
 }
 ```
 
 **POST** - /media/add_views `increments views of a post`
 ```json
 {
-    mediaid: "id",
+    "mediaid": "id",
 }
 ```
 
 **POST** - /media/comment/ `Creates a new comment entry`
 ```json
 {
-    mediaid: "id",
-    comment: "hello world"
+    "mediaid": "id",
+    "comment": "hello world"
 }
 ```
 
