@@ -2,6 +2,8 @@
 
 Website / Control Panel made for [GTA Open](https://github.com/PatrickGTR/gta-open) gamemode
 
+Preview of the website ca be seen here: https://imgur.com/a/tN38jGx
+
 ## Back end API
 
 - Written in **Go** and **MySQL**
